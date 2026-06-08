@@ -5,4 +5,4 @@
     mode="widthFix"
   />
   <text class="badge-text" wx:if="{{showText}}">Powered by CloudBase</text>
-</view> 
+</view>

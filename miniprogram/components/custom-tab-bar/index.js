@@ -1,10 +1,5 @@
 Component({
-  properties: {
-    selected: {
-      type: Number,
-      value: 0
-    }
-  },
+  properties: { selected: { type: Number, value: 0 } },
   data: {
     list: [
       { pagePath: '/pages/journal/journal', text: '📔 日志', key: 'journal' },

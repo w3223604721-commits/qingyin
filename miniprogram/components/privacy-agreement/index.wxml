@@ -1,17 +1,13 @@
-<!-- 隐私协议弹窗组件 -->
 <view class="privacy-overlay {{show ? 'show' : ''}}" wx:if="{{show}}" bindtap="onClose">
   <view class="privacy-container" catchtap="noop">
     <view class="privacy-header">
       <text class="privacy-logo">🛡️</text>
       <text class="privacy-title">欢迎使用轻印</text>
     </view>
-    
     <view class="privacy-body">
       <text class="privacy-subtitle">用户服务与隐私协议</text>
-      
       <scroll-view scroll-y class="privacy-scroll" style="max-height:400rpx;">
-        <text class="privacy-content">
-感谢您选择轻印旅行记忆！在使用本应用前，请仔细阅读以下协议：
+        <text class="privacy-content">感谢您选择轻印旅行记忆！在使用本应用前，请仔细阅读以下协议：
 
 【用户服务协议】
 
@@ -59,11 +55,9 @@
 • 注销账号（请联系客服）
 
 7. 联系方式
-如有疑问，请在「设置」-「和开发者聊聊天」中反馈。
-        </text>
+如有疑问，请在「设置」-「和开发者聊聊天」中反馈。</text>
       </scroll-view>
     </view>
-
     <view class="privacy-footer">
       <button class="btn-disagree" bindtap="onDisagree">不同意</button>
       <button class="btn-agree" bindtap="onAgree">同意并继续</button>
