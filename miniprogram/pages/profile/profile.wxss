@@ -4,7 +4,6 @@
   background: var(--bg-primary);
 }
 
-/* 头像与档案 */
 .profile-header-card {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark, #4F46E5));
   padding: 40rpx 28rpx 32rpx;
@@ -99,7 +98,6 @@
 
 .btn-edit-profile::after { border: none; }
 
-/* 统计卡片 */
 .stats-row {
   display: flex;
   gap: 12rpx;
@@ -129,7 +127,6 @@
   display: block;
 }
 
-/* 数据洞察 */
 .insight-section {
   margin: 0 28rpx 16rpx;
 }
@@ -202,7 +199,6 @@
   line-height: 1.3;
 }
 
-/* 功能列表 */
 .profile-menu {
   margin: 16rpx 28rpx;
   background: #fff;
@@ -235,7 +231,6 @@
   color: var(--text-muted);
 }
 
-/* 头像上传 */
 .avatar-upload-area {
   display: flex;
   flex-direction: column;

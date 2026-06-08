@@ -1,4 +1,3 @@
-/* 足迹报告 - 航旅纵横飞行轨迹风格 */
 .fp-page {
   width: 100%;
   height: 100vh;
@@ -6,7 +5,6 @@
   overflow: hidden;
 }
 
-/* 全屏地图容器 */
 .fp-map-fullscreen {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -17,7 +15,6 @@
   height: 100%;
 }
 
-/* 右侧工具栏 */
 .fp-toolbar {
   position: absolute;
   right: 20rpx;
@@ -44,7 +41,6 @@
 
 .fp-tool-btn::after { border: none; }
 
-/* ====== 顶部统计卡片 ====== */
 .fp-top-card {
   position: absolute;
   top: 0;
@@ -96,7 +92,6 @@
   display: block;
 }
 
-/* 统计行 */
 .fp-stats-row {
   display: flex;
   align-items: center;
@@ -134,7 +129,6 @@
   background: rgba(255,255,255,0.2);
 }
 
-/* 进度条 */
 .fp-route-progress {
   margin: 16rpx 32rpx 0;
 }
@@ -175,7 +169,6 @@
   color: rgba(255,255,255,0.5);
 }
 
-/* ====== 底部详情面板 ====== */
 .fp-bottom-panel {
   position: absolute;
   left: 0;
@@ -211,7 +204,6 @@
   transform: rotate(180deg);
 }
 
-/* Tab 栏 */
 .fp-tab-scroll {
   white-space: nowrap;
   padding: 8rpx 24rpx;
@@ -241,13 +233,11 @@
   font-weight: 700;
 }
 
-/* 详情滚动区 */
 .fp-detail-scroll {
   max-height: calc(70vh - 180rpx);
   padding: 16rpx 24rpx calc(24rpx + env(safe-area-inset-bottom));
 }
 
-/* ====== 时间线视图 ====== */
 .fp-timeline { padding: 8rpx 0; }
 
 .fp-tl-item {
@@ -346,7 +336,6 @@
   margin-top: 8rpx;
 }
 
-/* ====== 城市排行 ====== */
 .fp-city-rank { padding: 8rpx 0; }
 
 .fp-city-rank-item {
@@ -407,7 +396,6 @@
   flex-shrink: 0;
 }
 
-/* ====== 省份网格 ====== */
 .fp-province-grid {
   display: flex;
   flex-wrap: wrap;
@@ -447,7 +435,6 @@
 .prov-count { font-size: 20rpx; color: #6366F1; font-weight: 700; }
 .prov-building { font-size: 17rpx; color: #AAA; }
 
-/* ====== 飞行路线 ====== */
 .fp-flight-list { padding: 8rpx 0; }
 
 .fp-flight-seg {
@@ -509,7 +496,6 @@
   );
 }
 
-/* 空状态 */
 .fp-empty-tip {
   padding: 80rpx 0 40rpx;
   text-align: center;
@@ -517,8 +503,6 @@
 .empty-icon { font-size: 72rpx; display: block; margin-bottom: 16rpx; }
 .empty-text { font-size: 26rpx; color: #bbb; }
 
-/* ====== 回忆模式 ====== */
-/* 回忆状态栏 */
 .memory-status-bar {
   display: flex;
   align-items: center;
@@ -550,7 +534,6 @@
 }
 .memory-reset-btn::after { border: none; }
 
-/* 回忆日期选择器 */
 .memory-date-picker {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -641,7 +624,6 @@
 }
 .memory-picker-apply::after { border: none; }
 
-/* 回忆模式面板 */
 .memory-panel {
   padding: 8rpx 0;
 }
@@ -657,7 +639,6 @@
   font-size: 48rpx;
   flex-shrink: 0;
 }
-.memory-desc-info {}
 .memory-desc-title {
   font-size: 28rpx;
   font-weight: 800;
@@ -739,7 +720,6 @@
   justify-content: center;
   padding: 16rpx;
   background: transparent;
-  border: 1rpx solid #E5E7EB;
   border-radius: 16rpx;
   color: #999;
   font-size: 24rpx;

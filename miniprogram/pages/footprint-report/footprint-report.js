@@ -19,23 +19,20 @@ Page({
     displayCheckins: [],
     flightSegments: [],
 
-    // 面板交互
     showDetail: false,
 
-    // 轨迹播放
     isPlaying: false,
     playProgress: 0,
     routeStartLabel: '',
     routeEndLabel: '',
 
-    // 回忆模式 - 日期范围
     showDatePicker: false,
     dateStart: '',
     dateEnd: '',
     dateStartDisplay: '',
     dateEndDisplay: '',
-    memoryCheckins: [],  // 日期范围内的打卡点
-    memoryActive: false,  // 是否启用回忆模式
+    memoryCheckins: [],
+    memoryActive: false,
 
     _playTimer: null,
     _currentPlayIndex: 0
@@ -56,10 +53,8 @@ Page({
       createdAtCN: c.createdAt ? app.formatDateCN(c.createdAt) : ''
     }))
 
-    // 按时间排序
     checkins.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
 
-    // 统计城市和省份
     const cityMap = {}
     const provinceMap = {}
 
@@ -68,14 +63,12 @@ Page({
       if (c.province) provinceMap[c.province] = (provinceMap[c.province] || 0) + 1
     })
 
-    // 城市统计排序
     const cityStats = Object.entries(cityMap)
       .map(([name, count]) => ({ name, count, pct: 100 }))
       .sort((a, b) => b.count - a.count)
     const maxCityCount = Math.max(1, ...cityStats.map(s => s.count))
     cityStats.forEach(s => { s.pct = Math.round(s.count / maxCityCount * 100) })
 
-    // 省份统计（结合勋章）
     const medals = app.globalData.provinceMedals || []
     const shortProvince = (s) => (s || '').replace(/(省|市|自治区|特别行政区|壮族|回族|维吾尔)/g, '')
     const provinceStats = Object.entries(provinceMap).map(([name, count]) => {
@@ -91,13 +84,9 @@ Page({
     const visitedCities = [...new Set(checkins.map(c => c.city).filter(Boolean))]
     const visitedProvinces = [...new Set(checkins.map(c => c.province).filter(Boolean))]
 
-    // 构建飞行轨迹路线（连接所有打卡点）
     this._buildFlightRoute(checkins)
-
-    // 构建飞行段数据
     this._buildFlightSegments(checkins)
 
-    // 地图标记
     const markers = checkins.filter(c => c.lat && c.lng).map((c, i) => ({
       id: i,
       latitude: c.lat,
@@ -116,12 +105,11 @@ Page({
       anchor: { x: 0.5, y: 1 }
     }))
 
-    // 起终点标注
+    const routeCircles = []
     if (checkins.length >= 2) {
       const start = checkins[0]
       const end = checkins[checkins.length - 1]
       
-      // 起点
       if (start.lat) {
         routeCircles.push({
           latitude: start.lat,
@@ -132,7 +120,6 @@ Page({
         })
       }
 
-      // 终点
       if (end.lat) {
         routeCircles.push({
           latitude: end.lat,
@@ -154,12 +141,11 @@ Page({
       trackCount: (data.footprintTracks || []).length,
       displayCheckins: checkins,
       markers,
-      routeCircles: this.data.routeCircles,
+      routeCircles,
       routeStartLabel: checkins[0]?.city || '起点',
       routeEndLabel: checkins[checkins.length - 1]?.city || '终点'
     })
 
-    // 自动适配视野
     if (markers.length > 0) {
       this.fitAllPoints()
     }
@@ -167,7 +153,6 @@ Page({
     this.switchTab({ currentTarget: { dataset: { tab: 'timeline' } } })
   },
 
-  // ====== 飞行轨迹构建 ======
   _buildFlightRoute(checkins) {
     const points = checkins.filter(c => c.lat && c.lng)
     if (points.length < 2) {
@@ -180,9 +165,6 @@ Page({
       longitude: p.lng
     }))
 
-    // 主航线（渐变色效果模拟）
-    const colors = ['#6366F1', '#8B5CF6', '#A855F7', '#D946EF', '#EC4899']
-    
     this.setData({
       polylines: [{
         points: polylinePoints,
@@ -190,17 +172,14 @@ Page({
         width: 5,
         dottedLine: false,
         arrowLine: true,
-        arrowIconPath: '/images/arrow-right.png',
         borderColor: '#fff',
         borderWidth: 2
       }]
     })
 
-    // 调整地图视野到包含所有点
     this.setData({ mapScale: 5 })
   },
 
-  // ====== 飞行段构建 ======
   _buildFlightSegments(checkins) {
     const segments = []
     for (let i = 1; i < checkins.length; i++) {
@@ -218,7 +197,7 @@ Page({
         toCoords: curr.lat ? { lat: curr.lat, lng: curr.lng } : null
       })
     }
-    this.setData({ flightSegments: segments.reverse() }) // 最新的在前
+    this.setData({ flightSegments: segments.reverse() })
   },
 
   _getTransportLabel(transport) {
@@ -229,7 +208,6 @@ Page({
     return map[transport] || ''
   },
 
-  // ====== 轨迹播放 ======
   togglePlayRoute() {
     if (this.data.isPlaying) {
       this.stopPlayRoute()
@@ -239,7 +217,6 @@ Page({
   },
 
   startPlayRoute() {
-    // 如果回忆模式启用，使用回忆日期范围内的打卡点
     const checkins = this.data.memoryActive && this.data.memoryCheckins.length > 0
       ? this.data.memoryCheckins
       : this.data.displayCheckins
@@ -255,12 +232,6 @@ Page({
     let idx = 0
     const total = points.length - 1
 
-    // 构建播放轨迹的 polyline
-    const playLinePoints = points.map(p => ({
-      latitude: p.lat,
-      longitude: p.lng
-    }))
-
     this._playTimer = setInterval(() => {
       idx++
       if (idx >= total) {
@@ -271,14 +242,13 @@ Page({
       }
 
       const currPoint = points[idx]
-      const currTransport = currPoint.transport ? that._getTransportLabel(currPoint.transport) : ''
 
       that.setData({
         playProgress: Math.round(idx / total * 100),
         mapCenter: { lat: currPoint.lat, lng: currPoint.lng },
         mapScale: 12
       })
-    }, 800) // 每800ms移动一个点
+    }, 800)
   },
 
   stopPlayRoute() {
@@ -289,7 +259,6 @@ Page({
     this.setData({ isPlaying: false })
   },
 
-  // ====== 回忆模式 - 日期范围选择 ======
   openDatePicker() {
     this.setData({ showDatePicker: true })
   },
@@ -339,13 +308,11 @@ Page({
       return
     }
 
-    // 构建该时间段的轨迹线路
     const routePoints = checkins.filter(c => c.lat && c.lng).map(c => ({
       latitude: c.lat,
       longitude: c.lng
     }))
 
-    // 更新地图标记
     const markers = checkins.filter(c => c.lat && c.lng).map((c, i) => ({
       id: i,
       latitude: c.lat,
@@ -364,7 +331,6 @@ Page({
       anchor: { x: 0.5, y: 1 }
     }))
 
-    // 起终点标注
     const circles = []
     if (checkins.length >= 2) {
       const start = checkins[0]
@@ -373,7 +339,6 @@ Page({
       if (end.lat) circles.push({ latitude: end.lat, longitude: end.lng, radius: 3000, color: '#FF444420', fillColor: '#FF444430' })
     }
 
-    // 构建回忆飞行段
     const segments = []
     for (let i = 1; i < checkins.length; i++) {
       const prev = checkins[i - 1]
@@ -412,7 +377,6 @@ Page({
       routeEndLabel: checkins[checkins.length - 1]?.city || '终点'
     })
 
-    // 调整地图视野
     if (markers.length > 0) {
       this.fitAllPoints()
     }
@@ -437,7 +401,6 @@ Page({
     this.loadData()
   },
 
-  // ====== 面板交互 ======
   toggleDetail() {
     this.setData({ showDetail: !this.data.showDetail })
   },
@@ -451,7 +414,6 @@ Page({
     const seg = this.data.flightSegments[idx]
     if (!seg || !seg.fromCoords) return
 
-    // 动画飞向该段
     const midLat = (seg.fromCoords.lat + (seg.toCoords?.lat || seg.fromCoords.lat)) / 2
     const midLng = (seg.fromCoords.lng + (seg.toCoords?.lng || seg.fromCoords.lng)) / 2
 
@@ -484,12 +446,10 @@ Page({
 
   onRegionChange(e) {
     if (e.type === 'end') {
-      // 可在此处理地图移动事件
     }
   },
 
   goBack() {
-    // 先停止播放
     this.stopPlayRoute()
     wx.navigateBack()
   },

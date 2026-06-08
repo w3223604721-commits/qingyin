@@ -1,6 +1,4 @@
-<!-- 足迹报告页面 - 航旅纵横飞行轨迹风格 -->
 <view class="fp-page">
-  <!-- 全屏地图背景 -->
   <view class="fp-map-fullscreen">
     <map
       id="footprintMap"
@@ -16,7 +14,6 @@
       style="width:100%;height:100%;"
     ></map>
     
-    <!-- 右侧工具栏 -->
     <view class="fp-toolbar">
       <button class="fp-tool-btn" bindtap="locateUser" title="定位">
         <text>📍</text>
@@ -29,7 +26,6 @@
       </button>
     </view>
 
-    <!-- 顶部统计卡片 -->
     <view class="fp-top-card">
       <view class="fp-top-header">
         <button class="btn-back-small" bindtap="goBack">
@@ -41,7 +37,6 @@
         </view>
       </view>
 
-      <!-- 核心数据 -->
       <view class="fp-stats-row">
         <view class="fp-stat-item">
           <text class="fp-stat-num">{{totalCheckins}}</text>
@@ -64,7 +59,6 @@
         </view>
       </view>
 
-      <!-- 轨迹播放进度条（航旅纵横风格）-->
       <view class="fp-route-progress" wx:if="{{polylines[0]}}">
         <view class="progress-bar-bg">
           <view class="progress-bar-fill" style="width: {{playProgress}}%;"></view>
@@ -76,7 +70,6 @@
         </view>
       </view>
 
-      <!-- 回忆模式状态栏 -->
       <view class="memory-status-bar" wx:if="{{memoryActive}}">
         <text class="memory-status-text">🕰 回放中：{{dateStartDisplay}} ~ {{dateEndDisplay}}</text>
         <text class="memory-status-count">{{memoryCheckins.length}} 个足迹</text>
@@ -84,7 +77,6 @@
       </view>
     </view>
 
-    <!-- 回忆模式日期选择面板 -->
     <view class="memory-date-picker {{showDatePicker ? 'show' : ''}}" wx:if="{{showDatePicker}}">
       <view class="memory-picker-mask" bindtap="closeDatePicker"></view>
       <view class="memory-picker-content">
@@ -109,13 +101,11 @@
       </view>
     </view>
 
-    <!-- 底部详情面板（可上拉展开） -->
     <view class="fp-bottom-panel {{showDetail ? 'expanded' : ''}}" wx:if="{{!isPlaying}}">
       <view class="fp-panel-handle" bindtap="toggleDetail">
         <view class="panel-handle-bar {{showDetail ? 'up' : ''}}"></view>
       </view>
 
-      <!-- Tab 切换 -->
       <scroll-view scroll-x class="fp-tab-scroll" wx:if="{{showDetail}}">
         <view class="fp-tab-bar">
           <text class="fp-tab-item {{activeTab === 'timeline' ? 'active' : ''}}" bindtap="switchTab" data-tab="timeline">📍 足迹时间线</text>
@@ -126,7 +116,6 @@
         </view>
       </scroll-view>
 
-      <!-- 时间线视图 -->
       <scroll-view scroll-y class="fp-detail-scroll" wx:if="{{showDetail && activeTab === 'timeline'}}">
         <view class="fp-timeline">
           <view class="fp-tl-item" wx:for="{{displayCheckins}}" wx:key="id">
@@ -152,7 +141,6 @@
         </view>
       </scroll-view>
 
-      <!-- 城市排行榜 -->
       <scroll-view scroll-y class="fp-detail-scroll" wx:if="{{showDetail && activeTab === 'city'}}">
         <view class="fp-city-rank">
           <view class="fp-city-rank-item" wx:for="{{cityStats}}" wx:key="name">
@@ -168,7 +156,6 @@
         </view>
       </scroll-view>
 
-      <!-- 省份地图 -->
       <scroll-view scroll-y class="fp-detail-scroll" wx:if="{{showDetail && activeTab === 'province'}}">
         <view class="fp-province-grid">
           <view class="fp-prov-card {{item.lit ? 'lit' : ''}}" wx:for="{{provinceStats}}" wx:key="name">
@@ -180,7 +167,6 @@
         </view>
       </scroll-view>
 
-      <!-- 飞行路线 -->
       <scroll-view scroll-y class="fp-detail-scroll" wx:if="{{showDetail && activeTab === 'flight'}}">
         <view class="fp-flight-list">
           <view class="fp-flight-seg" wx:for="{{flightSegments}}" wx:key="id" bindtap="focusSegment" data-idx="{{index}}">
@@ -207,7 +193,6 @@
         </view>
       </scroll-view>
 
-      <!-- 回忆模式面板 -->
       <scroll-view scroll-y class="fp-detail-scroll" wx:if="{{showDetail && activeTab === 'memory'}}">
         <view class="memory-panel">
           <view class="memory-desc-card">
