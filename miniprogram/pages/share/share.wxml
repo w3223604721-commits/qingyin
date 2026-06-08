@@ -1,36 +1,17 @@
-<!-- 分享 Tab -->
 <view class="share-page">
-  <view class="page-header">
-    <text class="page-title">🧾 旅程分享</text>
-    <text class="page-subtitle">导出旅行记忆，分享精彩时刻</text>
-  </view>
-
-  <!-- 分享模式切换 -->
+  <view class="page-header"><text class="page-title">🧾 旅程分享</text><text class="page-subtitle">导出旅行记忆，分享精彩时刻</text></view>
   <view class="share-tabs">
     <button class="share-tab {{activeTab === 'export' ? 'active' : ''}}" bindtap="switchTab" data-tab="export">日志导出</button>
     <button class="share-tab {{activeTab === 'template' ? 'active' : ''}}" bindtap="switchTab" data-tab="template">自定义模板</button>
   </view>
-
-  <!-- ===== 日志导出 ===== -->
   <view class="share-panel" wx:if="{{activeTab === 'export'}}">
     <view class="share-section-title">选择要导出的旅程</view>
     <view class="share-journey-list">
-      <view class="empty-state" wx:if="{{journeys.length === 0}}">
-        <text class="empty-icon">🎫</text>
-        <text class="empty-text">还没有可分享的旅程</text>
-      </view>
+      <view class="empty-state" wx:if="{{journeys.length === 0}}"><text class="empty-icon">🎫</text><text class="empty-text">还没有可分享的旅程</text></view>
       <view class="share-card" wx:for="{{journeys}}" wx:key="id">
-        <view class="share-card-header">
-          <text class="share-card-name">{{item.name}}</text>
-          <text class="share-card-badge" wx:if="{{item.city}}">{{item.city}}</text>
-        </view>
+        <view class="share-card-header"><text class="share-card-name">{{item.name}}</text><text class="share-card-badge" wx:if="{{item.city}}">{{item.city}}</text></view>
         <view class="share-card-body">
-          <view class="share-card-meta">
-            <text class="meta-item">📅 {{item.dateRange || '未设置日期'}}</text>
-            <text class="meta-item">📝 {{item.dayCount}}天日记</text>
-            <text class="meta-item">📍 {{item.checkinCount}}打卡</text>
-            <text class="meta-item">📷 {{item.photoCount}}照片</text>
-          </view>
+          <view class="share-card-meta"><text class="meta-item">📅 {{item.dateRange || '未设置日期'}}</text><text class="meta-item">📝 {{item.dayCount}}天日记</text><text class="meta-item">📍 {{item.checkinCount}}打卡</text><text class="meta-item">📷 {{item.photoCount}}照片</text></view>
           <text class="share-card-desc" wx:if="{{item.desc}}">{{item.desc}}</text>
           <view class="share-card-thumbs" wx:if="{{item.thumbs.length > 0}}">
             <image class="share-thumb" wx:for="{{item.thumbs}}" wx:for-item="thumb" wx:key="*this" src="{{thumb}}" mode="aspectFill"></image>
@@ -38,115 +19,30 @@
           </view>
         </view>
         <view class="share-card-footer">
-          <button class="share-action export-action" bindtap="exportJourney" data-id="{{item.id}}">
-            <text>📥 导出图片</text>
-          </button>
-          <button class="share-action receipt-action" bindtap="openReceipt" data-id="{{item.id}}">
-            <text>🧾 小票分享</text>
-          </button>
+          <button class="share-action export-action" bindtap="exportJourney" data-id="{{item.id}}"><text>📥 导出图片</text></button>
+          <button class="share-action receipt-action" bindtap="openReceipt" data-id="{{item.id}}"><text>🧾 小票分享</text></button>
         </view>
       </view>
     </view>
   </view>
-
-  <!-- ===== 自定义模板 ===== -->
   <view class="share-panel" wx:if="{{activeTab === 'template'}}">
-    <!-- 模板风格选择 -->
     <view class="template-style-selector">
       <text class="template-style-title">选择分享风格</text>
       <view class="template-style-list">
-        <view class="template-style-card {{tplStyle === 'receipt' ? 'active' : ''}}" bindtap="selectStyle" data-style="receipt">
-          <text class="template-preview">🧾</text>
-          <text class="template-name">小票风格</text>
-        </view>
-        <view class="template-style-card {{tplStyle === 'card' ? 'active' : ''}}" bindtap="selectStyle" data-style="card">
-          <text class="template-preview">🎴</text>
-          <text class="template-name">卡片风格</text>
-          <text class="template-badge">即将上线</text>
-        </view>
-        <view class="template-style-card {{tplStyle === 'timeline' ? 'active' : ''}}" bindtap="selectStyle" data-style="timeline">
-          <text class="template-preview">📅</text>
-          <text class="template-name">时间线</text>
-          <text class="template-badge">即将上线</text>
-        </view>
-        <view class="template-style-card {{tplStyle === 'magazine' ? 'active' : ''}}" bindtap="selectStyle" data-style="magazine">
-          <text class="template-preview">📰</text>
-          <text class="template-name">杂志风</text>
-          <text class="template-badge">即将上线</text>
-        </view>
+        <view class="template-style-card {{tplStyle === 'receipt' ? 'active' : ''}}" bindtap="selectStyle" data-style="receipt"><text class="template-preview">🧾</text><text class="template-name">小票风格</text></view>
+        <view class="template-style-card" bindtap="selectStyle" data-style="card"><text class="template-preview">🎴</text><text class="template-name">卡片风格</text><text class="template-badge">即将上线</text></view>
+        <view class="template-style-card" bindtap="selectStyle" data-style="timeline"><text class="template-preview">📅</text><text class="template-name">时间线</text><text class="template-badge">即将上线</text></view>
+        <view class="template-style-card" bindtap="selectStyle" data-style="magazine"><text class="template-preview">📰</text><text class="template-name">杂志风</text><text class="template-badge">即将上线</text></view>
       </view>
     </view>
-
-    <!-- 自定义编辑区 -->
     <view class="template-custom-editor">
       <text class="editor-section-title">自定义内容</text>
-      <view class="form-group">
-        <text class="form-label">分享标题</text>
-        <input class="form-input" value="{{tplTitle}}" placeholder="如：这一段生活的小票" maxlength="30" bindinput="onTplTitleInput"/>
-      </view>
-      <view class="form-group">
-        <text class="form-label">选择图片 (2-9张)</text>
-        <view class="tpl-photo-area">
-          <view class="tpl-photo-list">
-            <view class="tpl-photo-item" wx:for="{{tplPhotos}}" wx:key="index">
-              <image class="tpl-photo-img" src="{{item.src}}" mode="aspectFill"></image>
-              <button class="tpl-photo-remove" bindtap="removeTplPhoto" data-index="{{index}}">✕</button>
-              <input class="tpl-photo-text" value="{{item.text}}" placeholder="写一句话..." maxlength="50" bindinput="onTplPhotoText" data-index="{{index}}"/>
-              <view class="tpl-photo-meta">
-                <input class="tpl-photo-place" value="{{item.place}}" placeholder="地点" maxlength="30" bindinput="onTplPhotoPlace" data-index="{{index}}"/>
-                <picker mode="date" value="{{item.date}}" bindchange="onTplPhotoDate" data-index="{{index}}">
-                  <text class="tpl-photo-date">{{item.date || '日期'}}</text>
-                </picker>
-              </view>
-            </view>
-          </view>
-          <button class="add-photo-btn" bindtap="addTplPhoto" wx:if="{{tplPhotos.length < 9}}">＋ 添加图片</button>
-          <text class="photo-count-hint">{{tplPhotos.length}}/9 张</text>
-        </view>
+      <view class="form-group"><text class="form-label">分享标题</text><input class="form-input" value="{{tplTitle}}" placeholder="如：这一段生活的小票" maxlength="30" bindinput="onTplTitleInput"/></view>
+      <view class="form-group"><text class="form-label">选择图片 (2-9张)</text>
+        <view class="tpl-photo-area"><button class="add-photo-btn" bindtap="addTplPhoto" wx:if="{{tplPhotos.length < 9}}">＋ 添加图片</button><text class="photo-count-hint">{{tplPhotos.length}}/9 张</text></view>
       </view>
       <button class="btn-primary btn-block" bindtap="generateReceipt">生成预览</button>
     </view>
   </view>
-
-  <!-- 小票预览弹窗 -->
-  <view class="receipt-overlay" wx:if="{{showReceipt}}" bindtap="closeReceipt">
-    <view class="receipt-container" catchtap="noop">
-      <scroll-view scroll-y class="receipt-scroll">
-        <view class="receipt-paper">
-          <view class="receipt-header">
-            <text class="receipt-logo">LIFE RECEIPT · 生活小票</text>
-            <text class="receipt-title">{{receiptTitle}}</text>
-          </view>
-          <view class="receipt-body">
-            <view class="receipt-journey-info" wx:if="{{receiptInfo}}">
-              <text class="rct-place">{{receiptInfo}}</text>
-              <text class="rct-date-range">{{receiptCount}} PHOTOS</text>
-            </view>
-            <view class="receipt-photo-item" wx:for="{{receiptItems}}" wx:key="index">
-              <view class="rp-photo-box">
-                <image class="rp-photo" src="{{item.img}}" mode="aspectFill"></image>
-              </view>
-              <view class="rp-photo-info">
-                <text class="rp-photo-time">{{item.place}}{{item.time ? ' · ' + item.time : ''}}</text>
-                <text class="rp-photo-title">{{item.title}}</text>
-                <text class="rp-photo-desc">{{item.desc}}😊</text>
-              </view>
-            </view>
-            <text class="receipt-footer-note">几张照片跨过不止一天，像把一小段生活折迭进了同一张纸里。</text>
-          </view>
-          <view class="receipt-footer-custom">
-            <text class="receipt-barcode">||||| |||||| ||| ||||||| |||</text>
-            <text class="receipt-thanks">LIFE RECEIPT · MAKE YOUR OWN</text>
-          </view>
-        </view>
-      </scroll-view>
-      <view class="receipt-actions">
-        <button class="share-btn" bindtap="saveReceipt">💾 保存相册</button>
-      </view>
-      <button class="receipt-close" bindtap="closeReceipt">✕</button>
-    </view>
-  </view>
-
-  <!-- 自定义 TabBar -->
   <custom-tab-bar selected="{{2}}"></custom-tab-bar>
 </view>

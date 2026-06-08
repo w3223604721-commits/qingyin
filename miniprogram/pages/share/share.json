@@ -1,7 +1,5 @@
 {
   "navigationBarTitleText": "分享",
   "navigationStyle": "custom",
-  "usingComponents": {
-    "custom-tab-bar": "/components/custom-tab-bar/index"
-  }
+  "usingComponents": { "custom-tab-bar": "/components/custom-tab-bar/index" }
 }
