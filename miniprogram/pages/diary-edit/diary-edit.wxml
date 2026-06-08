@@ -1,0 +1,47 @@
+<view class="page-container">
+  <view class="detail-nav">
+    <view class="btn-back" bindtap="goBack">‹ 返回</view>
+    <text class="detail-title">{{isEdit ? '编辑日记' : '新的一天'}}</text>
+    <view style="width:120rpx;"></view>
+  </view>
+
+  <view class="card" style="margin-top:16rpx;">
+    <!-- 日期 -->
+    <view class="form-group">
+      <text class="form-label">日期</text>
+      <picker mode="date" value="{{form.date}}" bindchange="onDateChange">
+        <view class="form-input">{{form.date || '请选择日期'}}</view>
+      </picker>
+    </view>
+    <!-- 标题 -->
+    <view class="form-group">
+      <text class="form-label">标题</text>
+      <input class="form-input" value="{{form.title}}" placeholder="如：到达札幌！" maxlength="30" bindinput="onField" data-field="title" />
+    </view>
+    <!-- 内容 -->
+    <view class="form-group">
+      <text class="form-label">内容</text>
+      <textarea class="form-textarea" value="{{form.content}}" placeholder="记录今天的所见所闻..." maxlength="500" bindinput="onField" data-field="content" />
+    </view>
+    <!-- 照片 -->
+    <view class="form-group">
+      <text class="form-label">照片 (最多50张)</text>
+      <view class="photo-grid">
+        <image wx:for="{{form.photos}}" wx:key="index" src="{{item}}" mode="aspectFill" class="photo-item" bindtap="previewPhoto" data-index="{{index}}" />
+        <view class="photo-item photo-remove-wrap" wx:for="{{form.photos}}" wx:key="index" bindtap="removePhoto" data-index="{{index}}">
+          <view class="photo-remove">✕</view>
+        </view>
+        <view wx:if="{{form.photos.length < 50}}" class="photo-add" bindtap="choosePhotos">
+          <text class="photo-add-icon">＋</text>
+          <text style="font-size:20rpx;margin-top:4rpx;">{{form.photos.length}}/50</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view style="display:flex;gap:16rpx;margin-top:32rpx;">
+      <button class="btn-secondary" style="flex:1;" bindtap="goBack" disabled="{{saving}}">取消</button>
+      <button class="btn-primary" style="flex:1;" bindtap="saveDay" disabled="{{saving}}">保存</button>
+    </view>
+  </view>
+</view>

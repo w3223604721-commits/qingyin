@@ -1,0 +1,22 @@
+{
+  "version": "2.0",
+  "envId": "{{env.ENV_ID}}",
+  "functionRoot": "./cloudfunctions",
+  "functions": [
+    {
+      "name": "admin-auth",
+      "runtime": "Nodejs18.15",
+      "timeout": 10
+    },
+    {
+      "name": "admin-categories",
+      "runtime": "Nodejs18.15",
+      "timeout": 10
+    },
+    {
+      "name": "admin-journeys",
+      "runtime": "Nodejs18.15",
+      "timeout": 15
+    }
+  ]
+}

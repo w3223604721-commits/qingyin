@@ -1,0 +1,37 @@
+<!-- 勋章页面 -->
+<view class="medals-page">
+  <view class="medals-header">
+    <view class="medals-header-top">
+      <button class="btn-back" bindtap="goBack">
+        <text class="back-icon">‹</text>
+        <text>返回</text>
+      </button>
+      <text class="medals-title">我的勋章</text>
+    </view>
+    <view class="medals-stats">
+      <text class="medals-lit-count">{{litCount}}</text>
+      <text class="medals-total-count"> / {{totalCount}}</text>
+      <text class="medals-percent"> ({{percent}}%)</text>
+    </view>
+    <view class="medals-progress">
+      <view class="medals-progress-bar" style="width: {{percent}}%;"></view>
+    </view>
+  </view>
+
+  <!-- 筛选按钮 -->
+  <view class="medal-filters">
+    <button class="filter-btn {{filter === 'all' ? 'active' : ''}}" bindtap="setFilter" data-filter="all">全部</button>
+    <button class="filter-btn {{filter === 'lit' ? 'active' : ''}}" bindtap="setFilter" data-filter="lit">已点亮</button>
+    <button class="filter-btn {{filter === 'unlit' ? 'active' : ''}}" bindtap="setFilter" data-filter="unlit">未点亮</button>
+  </view>
+
+  <!-- 勋章网格 -->
+  <view class="medal-grid">
+    <view class="medal-item {{item.lit ? 'lit' : 'unlit'}}" wx:for="{{displayMedals}}" wx:key="code">
+      <text class="medal-icon-lg">{{item.icon}}</text>
+      <text class="medal-name">{{item.name}}</text>
+      <text class="medal-building">{{item.building}}</text>
+      <text class="medal-lit-mark" wx:if="{{item.lit}}">✨</text>
+    </view>
+  </view>
+</view>

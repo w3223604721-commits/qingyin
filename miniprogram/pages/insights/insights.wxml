@@ -1,0 +1,91 @@
+<!-- 数据洞察页面 -->
+<view class="insights-page">
+  <view class="insights-header">
+    <button class="btn-back" bindtap="goBack">
+      <text class="back-icon">‹</text>
+      <text>返回</text>
+    </button>
+    <text class="insights-title">📊 数据洞察</text>
+  </view>
+
+  <!-- Tab 标签栏 -->
+  <view class="insight-tabs">
+    <button class="insight-tab {{activeTab === 'monthly' ? 'active' : ''}}" bindtap="switchTab" data-tab="monthly">月度活跃</button>
+    <button class="insight-tab {{activeTab === 'footprint' ? 'active' : ''}}" bindtap="switchTab" data-tab="footprint">足迹增长</button>
+    <button class="insight-tab {{activeTab === 'season' ? 'active' : ''}}" bindtap="switchTab" data-tab="season">季节分布</button>
+    <button class="insight-tab {{activeTab === 'tags' ? 'active' : ''}}" bindtap="switchTab" data-tab="tags">标签统计</button>
+  </view>
+
+  <!-- 图表内容区 -->
+  <view class="insight-chart-area">
+    <!-- 月度活跃 -->
+    <view class="chart-section" wx:if="{{activeTab === 'monthly'}}">
+      <view class="chart-title">
+        <text>近12个月旅行活跃度</text>
+        <text class="chart-subtitle">最高 {{monthlyMax}} 次/月</text>
+      </view>
+      <view class="bar-chart">
+        <view class="bar-column" wx:for="{{monthlyData}}" wx:key="label">
+          <view class="bar-fill" style="height: {{item.pct}}%;">
+            <text class="bar-value" wx:if="{{item.count > 0}}">{{item.count}}</text>
+          </view>
+          <text class="bar-label">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 足迹增长 -->
+    <view class="chart-section" wx:if="{{activeTab === 'footprint'}}">
+      <view class="chart-title">
+        <text>近12天足迹点统计</text>
+        <text class="chart-subtitle">共 {{footprintTotal}} 个点</text>
+      </view>
+      <view class="bar-chart">
+        <view class="bar-column" wx:for="{{footprintData}}" wx:key="date">
+          <view class="bar-fill" style="height: {{item.pct}}%;">
+            <text class="bar-value" wx:if="{{item.count > 0}}">{{item.count}}</text>
+          </view>
+          <text class="bar-label">{{item.day}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 季节分布 -->
+    <view class="chart-section" wx:if="{{activeTab === 'season'}}">
+      <view class="chart-title">
+        <text>季节旅行偏好</text>
+      </view>
+      <view class="season-bars">
+        <view class="season-bar-row" wx:for="{{seasonData}}" wx:key="name">
+          <text class="season-label">{{item.icon}} {{item.name}}</text>
+          <view class="season-bar-bg">
+            <view class="season-bar-fill" style="width: {{item.pct}}%;"></view>
+          </view>
+          <text class="season-count">{{item.count}}次</text>
+        </view>
+      </view>
+      <view class="season-summary">
+        <text>最偏爱的季节：<text class="season-highlight">{{topSeason}}</text>（{{topSeasonPct}}%）</text>
+      </view>
+    </view>
+
+    <!-- 标签统计 -->
+    <view class="chart-section" wx:if="{{activeTab === 'tags'}}">
+      <view class="chart-title">
+        <text>标签使用统计</text>
+      </view>
+      <view class="tag-bars">
+        <view class="tag-bar-row" wx:for="{{tagData}}" wx:key="name">
+          <text class="tag-label">{{item.name}}</text>
+          <view class="tag-bar-bg">
+            <view class="tag-bar-fill" style="width: {{item.pct}}%;"></view>
+          </view>
+          <text class="tag-count">{{item.count}}次</text>
+        </view>
+      </view>
+      <view class="tag-summary" wx:if="{{tagData.length === 0}}">
+        <text class="empty-text">暂无标签数据</text>
+      </view>
+    </view>
+  </view>
+</view>

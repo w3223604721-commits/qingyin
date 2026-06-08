@@ -1,0 +1,12 @@
+{
+  "name": "Mapory - 旅行记忆交互原型生成器",
+  "id": "mapory-prototype-generator",
+  "api": "1.0.0",
+  "main": "code.js",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "editorType": ["figma"],
+  "networkAccess": {
+    "allowedDomains": ["none"]
+  }
+}

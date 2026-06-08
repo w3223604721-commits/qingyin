@@ -1,0 +1,249 @@
+<!-- 足迹报告页面 - 航旅纵横飞行轨迹风格 -->
+<view class="fp-page">
+  <!-- 全屏地图背景 -->
+  <view class="fp-map-fullscreen">
+    <map
+      id="footprintMap"
+      class="fp-map"
+      latitude="{{mapCenter.lat}}"
+      longitude="{{mapCenter.lng}}"
+      scale="{{mapScale}}"
+      markers="{{markers}}"
+      polyline="{{polylines}}"
+      circles="{{routeCircles}}"
+      show-location="{{true}}"
+      bindregionchange="onRegionChange"
+      style="width:100%;height:100%;"
+    ></map>
+    
+    <!-- 右侧工具栏 -->
+    <view class="fp-toolbar">
+      <button class="fp-tool-btn" bindtap="locateUser" title="定位">
+        <text>📍</text>
+      </button>
+      <button class="fp-tool-btn" bindtp="fitAllPoints" title="查看全部">
+        <text>🌐</text>
+      </button>
+      <button class="fp-tool-btn" bindtap="togglePlayRoute" title="{{isPlaying ? '暂停' : '播放轨迹'}}">
+        <text>{{isPlaying ? '⏸' : '▶'}}</text>
+      </button>
+    </view>
+
+    <!-- 顶部统计卡片 -->
+    <view class="fp-top-card">
+      <view class="fp-top-header">
+        <button class="btn-back-small" bindtap="goBack">
+          <text class="back-icon">‹</text>
+        </button>
+        <view class="fp-title-area">
+          <text class="fp-main-title">✈ 我的足迹报告</text>
+          <text class="fp-sub-title">共 {{totalCheckins}} 个足迹 · {{visitedProvinces.length}} 个省份</text>
+        </view>
+      </view>
+
+      <!-- 核心数据 -->
+      <view class="fp-stats-row">
+        <view class="fp-stat-item">
+          <text class="fp-stat-num">{{totalCheckins}}</text>
+          <text class="fp-stat-label">打卡点</text>
+        </view>
+        <view class="fp-stat-divider"></view>
+        <view class="fp-stat-item">
+          <text class="fp-stat-num">{{visitedCities.length}}</text>
+          <text class="fp-stat-label">城市数</text>
+        </view>
+        <view class="fp-stat-divider"></view>
+        <view class="fp-stat-item">
+          <text class="fp-stat-num">{{provinceLitCount}}/{{medalTotalCount}}</text>
+          <text class="fp-stat-label">已点亮</text>
+        </view>
+        <view class="fp-stat-divider"></view>
+        <view class="fp-stat-item">
+          <text class="fp-stat-num">{{trackCount}}</text>
+          <text class="fp-stat-label">轨迹数</text>
+        </view>
+      </view>
+
+      <!-- 轨迹播放进度条（航旅纵横风格）-->
+      <view class="fp-route-progress" wx:if="{{polylines[0]}}">
+        <view class="progress-bar-bg">
+          <view class="progress-bar-fill" style="width: {{playProgress}}%;"></view>
+          <view class="progress-dot" style="left: {{playProgress}}%;"></view>
+        </view>
+        <view class="progress-labels">
+          <text>{{routeStartLabel || '起点'}}</text>
+          <text>{{routeEndLabel || '终点'}}</text>
+        </view>
+      </view>
+
+      <!-- 回忆模式状态栏 -->
+      <view class="memory-status-bar" wx:if="{{memoryActive}}">
+        <text class="memory-status-text">🕰 回放中：{{dateStartDisplay}} ~ {{dateEndDisplay}}</text>
+        <text class="memory-status-count">{{memoryCheckins.length}} 个足迹</text>
+        <button class="memory-reset-btn" bindtap="resetMemory">✕ 退出回忆</button>
+      </view>
+    </view>
+
+    <!-- 回忆模式日期选择面板 -->
+    <view class="memory-date-picker {{showDatePicker ? 'show' : ''}}" wx:if="{{showDatePicker}}">
+      <view class="memory-picker-mask" bindtap="closeDatePicker"></view>
+      <view class="memory-picker-content">
+        <text class="memory-picker-title">🕰 选择回忆时段</text>
+        <text class="memory-picker-sub">选择日期范围，回顾你的旅程轨迹</text>
+        <view class="memory-picker-row">
+          <text class="memory-picker-label">开始日期</text>
+          <picker mode="date" value="{{dateStart}}" bindchange="onDateStartChange">
+            <view class="memory-date-input">{{dateStartDisplay || '请选择'}}</view>
+          </picker>
+        </view>
+        <view class="memory-picker-row">
+          <text class="memory-picker-label">结束日期</text>
+          <picker mode="date" value="{{dateEnd}}" bindchange="onDateEndChange">
+            <view class="memory-date-input">{{dateEndDisplay || '请选择'}}</view>
+          </picker>
+        </view>
+        <view class="memory-picker-btns">
+          <button class="memory-picker-cancel" bindtap="closeDatePicker">取消</button>
+          <button class="memory-picker-apply" bindtap="applyDateRange">开始回忆</button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部详情面板（可上拉展开） -->
+    <view class="fp-bottom-panel {{showDetail ? 'expanded' : ''}}" wx:if="{{!isPlaying}}">
+      <view class="fp-panel-handle" bindtap="toggleDetail">
+        <view class="panel-handle-bar {{showDetail ? 'up' : ''}}"></view>
+      </view>
+
+      <!-- Tab 切换 -->
+      <scroll-view scroll-x class="fp-tab-scroll" wx:if="{{showDetail}}">
+        <view class="fp-tab-bar">
+          <text class="fp-tab-item {{activeTab === 'timeline' ? 'active' : ''}}" bindtap="switchTab" data-tab="timeline">📍 足迹时间线</text>
+          <text class="fp-tab-item {{activeTab === 'city' ? 'active' : ''}}" bindtap="switchTab" data-tab="city">🏙 城市排行</text>
+          <text class="fp-tab-item {{activeTab === 'province' ? 'active' : ''}}" bindtap="switchTab" data-tab="province">🗺 省份地图</text>
+          <text class="fp-tab-item {{activeTab === 'flight' ? 'active' : ''}}" bindtap="switchTab" data-tab="flight">✈ 飞行路线</text>
+          <text class="fp-tab-item {{activeTab === 'memory' ? 'active' : ''}}" bindtap="switchTab" data-tab="memory">🕰 回忆</text>
+        </view>
+      </scroll-view>
+
+      <!-- 时间线视图 -->
+      <scroll-view scroll-y class="fp-detail-scroll" wx:if="{{showDetail && activeTab === 'timeline'}}">
+        <view class="fp-timeline">
+          <view class="fp-tl-item" wx:for="{{displayCheckins}}" wx:key="id">
+            <view class="fp-tl-dot {{index === 0 ? 'first' : ''}} {{index === displayCheckins.length - 1 ? 'last' : ''}}">
+              <view class="tl-dot-inner"></view>
+            </view>
+            <view class="fp-tl-content">
+              <view class="fp-tl-card">
+                <view class="fp-tl-header">
+                  <text class="fp-tl-place">{{item.place}}</text>
+                  <text class="fp-tl-date">{{item.createdAtCN}}</text>
+                </view>
+                <text class="fp-tl-loc">{{item.province}}{{item.city ? '·' + item.city : ''}}</text>
+                <text class="fp-tl-note" wx:if="{{item.note}}">{{item.note}}</text>
+                <image class="fp-tl-photo" src="{{item.photo}}" mode="aspectFill" wx:if="{{item.photo}}"></image>
+              </view>
+            </view>
+          </view>
+          <view class="fp-empty-tip" wx:if="{{displayCheckins.length === 0}}">
+            <text class="empty-icon">🛫</text>
+            <text class="empty-text">还没有足迹记录，去打卡吧！</text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <!-- 城市排行榜 -->
+      <scroll-view scroll-y class="fp-detail-scroll" wx:if="{{showDetail && activeTab === 'city'}}">
+        <view class="fp-city-rank">
+          <view class="fp-city-rank-item" wx:for="{{cityStats}}" wx:key="name">
+            <view class="rank-index {{index < 3 ? 'top' + (index+1) : ''}}">
+              <text>{{index + 1}}</text>
+            </view>
+            <text class="rank-city-name">{{item.name}}</text>
+            <view class="rank-bar-wrap">
+              <view class="rank-bar-fill" style="width: {{item.pct}}%;"></view>
+            </view>
+            <text class="rank-count">{{item.count}}次</text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <!-- 省份地图 -->
+      <scroll-view scroll-y class="fp-detail-scroll" wx:if="{{showDetail && activeTab === 'province'}}">
+        <view class="fp-province-grid">
+          <view class="fp-prov-card {{item.lit ? 'lit' : ''}}" wx:for="{{provinceStats}}" wx:key="name">
+            <text class="prov-status-icon">{{item.lit ? '🔥' : '○'}}</text>
+            <text class="prov-name">{{item.shortName}}</text>
+            <text class="prov-count">{{item.count}}次</text>
+            <text class="prov-building" wx:if="{{item.lit}}">{{item.building}}</text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <!-- 飞行路线 -->
+      <scroll-view scroll-y class="fp-detail-scroll" wx:if="{{showDetail && activeTab === 'flight'}}">
+        <view class="fp-flight-list">
+          <view class="fp-flight-seg" wx:for="{{flightSegments}}" wx:key="id" bindtap="focusSegment" data-idx="{{index}}">
+            <view class="flight-dep">
+              <text class="flight-city">{{item.fromCity}}</text>
+              <text class="flight-time">{{item.fromTime}}</text>
+            </view>
+            <view class="flight-line-area">
+              <text class="flight-plane">{{item.transportLabel || '✈️'}}</text>
+              <view class="flight-dash-line"></view>
+            </view>
+            <view class="flight-arr">
+              <text class="flight-city">{{item.toCity}}</text>
+              <text class="flight-time">{{item.toTime}}</text>
+            </view>
+          </view>
+          <view class="fp-empty-tip" wx:if="{{flightSegments.length === 0 && totalCheckins > 1}}">
+            <text class="empty-text">正在生成飞行路线...</text>
+          </view>
+          <view class="fp-empty-tip" wx:if="{{totalCheckins <= 1}}">
+            <text class="empty-icon">🛫</text>
+            <text class="empty-text">至少需要2个足迹点才能生成飞行路线</text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <!-- 回忆模式面板 -->
+      <scroll-view scroll-y class="fp-detail-scroll" wx:if="{{showDetail && activeTab === 'memory'}}">
+        <view class="memory-panel">
+          <view class="memory-desc-card">
+            <text class="memory-desc-icon">🕰</text>
+            <view class="memory-desc-info">
+              <text class="memory-desc-title">旅行回忆</text>
+              <text class="memory-desc-text">选择日期范围，回溯你的旅行轨迹。地图将以动画方式连线，重现你的旅途。</text>
+            </view>
+          </view>
+
+          <button class="memory-start-btn" bindtap="openDatePicker">
+            <text class="memory-btn-icon">📅</text>
+            <text>选择回忆时段</text>
+          </button>
+
+          <view wx:if="{{memoryActive}}" class="memory-active-section">
+            <view class="memory-active-header">
+              <text class="memory-active-title">📺 当前回放</text>
+              <text class="memory-active-range">{{dateStartDisplay}} ~ {{dateEndDisplay}}</text>
+            </view>
+            <view class="memory-active-stats">
+              <text>共 {{memoryCheckins.length}} 个足迹点</text>
+            </view>
+            <button class="memory-replay-btn {{isPlaying ? 'playing' : ''}}" bindtap="togglePlayRoute">
+              <text>{{isPlaying ? '⏸ 暂停' : '▶ 播放动画'}}</text>
+            </button>
+            <button class="memory-exit-btn" bindtap="resetMemory">退出回忆模式</button>
+          </view>
+
+          <view wx:else class="memory-empty-tip">
+            <text class="memory-empty-icon">🎞️</text>
+            <text class="memory-empty-title">还没有选择回忆时段</text>
+            <text class="memory-empty-desc">点击上方按钮，选择一段日期范围来回溯你的旅程</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,10 @@
+{
+  "_id": "xxxxxxxxx",
+  "name": "自然风光",
+  "icon": "🏔️",
+  "sort_order": 1,
+  "color": "#67C23A",
+  "description": "山川湖海、自然景观类旅程",
+  "created_at": { "$date": "2026-06-04T00:00:00.000Z" },
+  "updated_at": { "$date": "2026-06-04T00:00:00.000Z" }
+}

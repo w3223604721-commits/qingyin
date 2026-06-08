@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "打卡",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "custom-tab-bar": "/components/custom-tab-bar/index"
+  }
+}

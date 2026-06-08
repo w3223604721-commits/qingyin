@@ -1,0 +1,163 @@
+<!-- 我的 Tab -->
+<view class="profile-page">
+  <!-- 头像与档案 -->
+  <view class="profile-header-card">
+    <view class="profile-avatar-wrap" bindtap="openProfileModal">
+      <view class="profile-avatar">
+        <image class="avatar-img" src="{{profile.avatar}}" mode="aspectFill" wx:if="{{profile.avatar}}"></image>
+        <text class="avatar-text" wx:else>{{profile.initial}}</text>
+      </view>
+      <text class="avatar-edit-badge">✏️</text>
+    </view>
+    <view class="profile-info">
+      <text class="profile-name">{{profile.name}}</text>
+      <text class="profile-bio">{{profile.bio}}</text>
+      <view class="profile-stats">
+        <text>{{journeyCount}} 段旅程</text>
+        <text class="dot">·</text>
+        <text>{{checkinCount}} 个打卡</text>
+      </view>
+    </view>
+    <button class="btn-edit-profile" bindtap="openProfileModal">编辑资料</button>
+  </view>
+
+  <!-- 统计卡片 -->
+  <view class="stats-row">
+    <view class="stat-card">
+      <text class="stat-num">{{checkinCount}}</text>
+      <text class="stat-label">打卡点</text>
+    </view>
+    <view class="stat-card">
+      <text class="stat-num">{{photoCount}}</text>
+      <text class="stat-label">照片</text>
+    </view>
+    <view class="stat-card">
+      <text class="stat-num">{{provinceCount}}</text>
+      <text class="stat-label">省份/城市</text>
+    </view>
+    <view class="stat-card">
+      <text class="stat-num">{{journeyCount}}</text>
+      <text class="stat-label">旅程</text>
+    </view>
+  </view>
+
+  <!-- 数据洞察 -->
+  <view class="insight-section">
+    <view class="section-title-row">
+      <text class="section-title">📊 数据洞察</text>
+      <button class="insight-toggle-btn" bindtap="goInsights">
+        <text>详细 ›</text>
+      </button>
+    </view>
+    <view class="insight-cards">
+      <view class="insight-card">
+        <text class="insight-icon">📅</text>
+        <view class="insight-info">
+          <text class="insight-label">月度活跃</text>
+          <text class="insight-value">{{insights.monthly}}</text>
+          <text class="insight-sub">{{insights.monthlySub}}</text>
+        </view>
+      </view>
+      <view class="insight-card">
+        <text class="insight-icon">👣</text>
+        <view class="insight-info">
+          <text class="insight-label">足迹增长</text>
+          <text class="insight-value">{{insights.footprint}}</text>
+          <text class="insight-sub">{{insights.footprintSub}}</text>
+        </view>
+      </view>
+      <view class="insight-card">
+        <text class="insight-icon">🍂</text>
+        <view class="insight-info">
+          <text class="insight-label">季节分布</text>
+          <text class="insight-value">{{insights.season}}</text>
+          <text class="insight-sub">{{insights.seasonSub}}</text>
+        </view>
+      </view>
+      <view class="insight-card">
+        <text class="insight-icon">🏷️</text>
+        <view class="insight-info">
+          <text class="insight-label">标签统计</text>
+          <text class="insight-value">{{insights.tags}}</text>
+          <text class="insight-sub">{{insights.tagsSub}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 功能列表 -->
+  <view class="profile-menu">
+    <view class="menu-item" bindtap="switchToCheckin">
+      <text class="menu-icon">🗺️</text>
+      <text>我的足迹</text>
+      <text class="menu-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="goFootprintReport">
+      <text class="menu-icon">📊</text>
+      <text>足迹报告</text>
+      <text class="menu-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="goMedals">
+      <text class="menu-icon">🏅</text>
+      <text>我的勋章</text>
+      <text class="menu-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="exportData">
+      <text class="menu-icon">📤</text>
+      <text>导出数据</text>
+      <text class="menu-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="importData">
+      <text class="menu-icon">📥</text>
+      <text>导入数据</text>
+      <text class="menu-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="goSettings">
+      <text class="menu-icon">⚙️</text>
+      <text>设置</text>
+      <text class="menu-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="goAbout">
+      <text class="menu-icon">ℹ️</text>
+      <text>关于轻印</text>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 编辑资料模态框 -->
+  <view class="modal-mask {{showProfileModal ? 'show' : ''}}" bindtap="closeProfileModal" wx:if="{{showProfileModal}}">
+    <view class="modal-content" catchtap="noop">
+      <view class="modal-header">
+        <text class="modal-title">编辑资料</text>
+        <button class="modal-close" bindtap="closeProfileModal">✕</button>
+      </view>
+      <view class="modal-body">
+        <view class="form-group">
+          <text class="form-label">头像</text>
+          <view class="avatar-upload-area" bindtap="chooseAvatar">
+            <view class="avatar-preview-lg">
+              <image class="avatar-preview-img" src="{{editProfile.avatar}}" mode="aspectFill" wx:if="{{editProfile.avatar}}"></image>
+              <text class="avatar-preview-text" wx:else>{{editProfile.initial}}</text>
+            </view>
+            <text class="avatar-upload-hint">点击更换头像</text>
+          </view>
+        </view>
+        <view class="form-group">
+          <text class="form-label">昵称</text>
+          <input class="form-input" value="{{editProfile.name}}" placeholder="你的旅行者名称" maxlength="15" bindinput="onProfileField" data-field="name"/>
+        </view>
+        <view class="form-group">
+          <text class="form-label">个性签名</text>
+          <textarea class="form-textarea" value="{{editProfile.bio}}" placeholder="用一句话介绍自己..." maxlength="50" bindinput="onProfileField" data-field="bio"/>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <button class="btn-secondary" bindtap="closeProfileModal">取消</button>
+        <button class="btn-primary" bindtap="saveProfile">保存</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 自定义 TabBar -->
+  <custom-tab-bar selected="{{3}}"></custom-tab-bar>
+</view>

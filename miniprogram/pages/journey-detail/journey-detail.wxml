@@ -1,0 +1,64 @@
+<view class="page-container">
+  <!-- 导航栏 -->
+  <view class="detail-nav">
+    <view class="btn-back" bindtap="goBack">‹ 返回</view>
+    <text class="detail-title">{{journey.name}}</text>
+    <view style="width:120rpx;"></view>
+  </view>
+
+  <!-- 图片轮播 -->
+  <view wx:if="{{carouselPhotos.length > 0}}" class="carousel-wrap">
+    <swiper class="carousel-swiper" current="{{carouselIndex}}" bindchange="onSwiperChange"
+            indicator-dots indicator-color="rgba(255,255,255,0.4)"
+            indicator-active-color="#fff" autoplay circular
+            interval="3000" duration="300"
+            bindanimationfinish="onSwiperAnimationFinish">
+      <swiper-item wx:for="{{carouselPhotos}}" wx:key="index">
+        <image src="{{item}}" mode="aspectFill" class="carousel-img" />
+        <view class="carousel-overlay">{{carouselLabels[index]}}</view>
+      </swiper-item>
+    </swiper>
+    <!-- 当前图片计数器 -->
+    <view class="carousel-counter">{{carouselIndex + 1}} / {{carouselPhotos.length}}</view>
+  </view>
+  <view wx:else class="carousel-empty">
+    <text>📷 还没有照片，去日记中添加吧</text>
+  </view>
+
+  <!-- 旅程信息 -->
+  <view class="card" style="margin-top:24rpx;">
+    <text style="font-size:26rpx;color:var(--text-muted);">{{app.formatDateRange(journey.startDate, journey.endDate)}}</text>
+    <view wx:if="{{journey.city}}" style="margin-top:12rpx;">
+      <text wx:for="{{journey.city.split(',')}}" wx:key="*this" wx:if="{{item}}" class="tag">{{item.trim()}}</text>
+    </view>
+    <text wx:if="{{journey.desc}}" style="font-size:26rpx;color:var(--text-secondary);margin-top:12rpx;display:block;line-height:1.6;">{{journey.desc}}</text>
+  </view>
+
+  <!-- 日记列表 -->
+  <view wx:if="{{journey.days.length === 0}}" class="empty-state" style="padding:80rpx 0;">
+    <text class="empty-icon">📝</text>
+    <text class="empty-desc">还没有日记，点击下方按钮添加第一天</text>
+  </view>
+
+  <view wx:else class="day-list">
+    <view wx:for="{{sortedDays}}" wx:key="id" class="day-card" bindtap="editDay" data-id="{{item.id}}">
+      <view class="day-card-header">
+        <text class="day-date">📅 {{app.formatDate(item.date)}}</text>
+        <text class="day-delete" catchtap="deleteDay" data-id="{{item.id}}">🗑️</text>
+      </view>
+      <text wx:if="{{item.title}}" class="day-title">{{item.title}}</text>
+      <text wx:if="{{item.content}}" class="day-content">{{item.content}}</text>
+      <!-- 照片缩略图 -->
+      <view wx:if="{{item.photos.length > 0}}" class="day-photos">
+        <image wx:for="{{item.photos}}" wx:for-index="pi" wx:for-item="photo" wx:key="pi" wx:if="{{pi < 4}}" src="{{photo}}" mode="aspectFill" class="day-photo-thumb" bindtap="previewDayPhotos" data-photos="{{item.photos}}" data-current="{{pi}}" />
+        <view wx:if="{{item.photos.length > 4}}" class="day-photo-more">+{{item.photos.length - 4}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 添加日记按钮 -->
+  <button class="btn-add-day" bindtap="addDay">＋ 添加新的一天</button>
+
+  <!-- 底部间距 -->
+  <view style="height:40rpx;"></view>
+</view>

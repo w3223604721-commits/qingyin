@@ -1,0 +1,770 @@
+/* 足迹报告 - 航旅纵横飞行轨迹风格 */
+.fp-page {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 全屏地图容器 */
+.fp-map-fullscreen {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+}
+
+.fp-map {
+  width: 100%;
+  height: 100%;
+}
+
+/* 右侧工具栏 */
+.fp-toolbar {
+  position: absolute;
+  right: 20rpx;
+  top: calc(240rpx + env(safe-area-inset-top));
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  z-index: 10;
+}
+
+.fp-tool-btn {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  border: none;
+  padding: 0;
+}
+
+.fp-tool-btn::after { border: none; }
+
+/* ====== 顶部统计卡片 ====== */
+.fp-top-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding-top: calc(env(safe-area-inset-top) + 16rpx);
+  padding-bottom: 24rpx;
+  background: linear-gradient(180deg, rgba(10,36,99,0.96) 0%, rgba(10,36,99,0.85) 60%, transparent 100%);
+  z-index: 5;
+}
+
+.fp-top-header {
+  display: flex;
+  align-items: center;
+  padding: 0 28rpx 20rpx;
+  gap: 16rpx;
+}
+
+.btn-back-small {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-back-small::after { border: none; }
+
+.back-icon { font-size: 36rpx; }
+
+.fp-title-area { flex: 1; }
+
+.fp-main-title {
+  font-size: 34rpx;
+  font-weight: 900;
+  color: #fff;
+  display: block;
+}
+
+.fp-sub-title {
+  font-size: 22rpx;
+  color: rgba(255,255,255,0.7);
+  margin-top: 4rpx;
+  display: block;
+}
+
+/* 统计行 */
+.fp-stats-row {
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 20rpx;
+  padding: 20rpx 24rpx;
+  margin: 0 20rpx;
+}
+
+.fp-stat-item {
+  flex: 1;
+  text-align: center;
+}
+
+.fp-stat-num {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: #FFD700;
+  display: block;
+  line-height: 1.2;
+}
+
+.fp-stat-label {
+  font-size: 20rpx;
+  color: rgba(255,255,255,0.7);
+  display: block;
+  margin-top: 2rpx;
+}
+
+.fp-stat-divider {
+  width: 1rpx;
+  height: 40rpx;
+  background: rgba(255,255,255,0.2);
+}
+
+/* 进度条 */
+.fp-route-progress {
+  margin: 16rpx 32rpx 0;
+}
+
+.progress-bar-bg {
+  height: 8rpx;
+  background: rgba(255,255,255,0.2);
+  border-radius: 4rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FFD700, #FFA500);
+  border-radius: 4rpx;
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+.progress-dot {
+  position: absolute;
+  top: -4rpx;
+  width: 16rpx;
+  height: 16rpx;
+  background: #FFD700;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 0 8rpx rgba(255,215,0,0.6);
+  transition: left 0.3s ease;
+}
+
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6rpx;
+  font-size: 18rpx;
+  color: rgba(255,255,255,0.5);
+}
+
+/* ====== 底部详情面板 ====== */
+.fp-bottom-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+  z-index: 15;
+  max-height: 55vh;
+  transition: max-height 0.35s ease;
+  box-shadow: 0 -4rpx 24rpx rgba(0,0,0,0.08);
+}
+
+.fp-bottom-panel.expanded {
+  max-height: 70vh;
+}
+
+.fp-panel-handle {
+  padding: 16rpx 0 8rpx;
+  display: flex;
+  justify-content: center;
+}
+
+.panel-handle-bar {
+  width: 64rpx;
+  height: 6rpx;
+  background: #ddd;
+  border-radius: 3rpx;
+  transition: transform 0.2s ease;
+}
+
+.panel-handle-bar.up {
+  transform: rotate(180deg);
+}
+
+/* Tab 栏 */
+.fp-tab-scroll {
+  white-space: nowrap;
+  padding: 8rpx 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.fp-tab-bar {
+  display: inline-flex;
+  gap: 0;
+  background: #f5f5f5;
+  border-radius: 14rpx;
+  padding: 4rpx;
+}
+
+.fp-tab-item {
+  padding: 14rpx 24rpx;
+  font-size: 24rpx;
+  color: #888;
+  border-radius: 10rpx;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.fp-tab-item.active {
+  background: #0A2463;
+  color: #FFD700;
+  font-weight: 700;
+}
+
+/* 详情滚动区 */
+.fp-detail-scroll {
+  max-height: calc(70vh - 180rpx);
+  padding: 16rpx 24rpx calc(24rpx + env(safe-area-inset-bottom));
+}
+
+/* ====== 时间线视图 ====== */
+.fp-timeline { padding: 8rpx 0; }
+
+.fp-tl-item {
+  display: flex;
+  gap: 16rpx;
+  padding-bottom: 20rpx;
+}
+
+.fp-tl-dot {
+  width: 28rpx;
+  height: 28rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.fp-tl-dot::before {
+  content: '';
+  position: absolute;
+  top: 28rpx;
+  left: 13rpx;
+  width: 2rpx;
+  height: calc(100% + 20rpx);
+  background: #e8e8e8;
+}
+
+.fp-tl-dot.last::before { display: none; }
+
+.tl-dot-inner {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background: #d9d9d9;
+  z-index: 2;
+  border: 3rpx solid #fff;
+  box-shadow: 0 1rpx 4rpx rgba(0,0,0,0.1);
+}
+
+.fp-tl-dot.first .tl-dot-inner {
+  background: #07C160;
+  width: 20rpx;
+  height: 20rpx;
+}
+
+.fp-tl-dot.last .tl-dot-inner {
+  background: #FF4444;
+}
+
+.fp-tl-content { flex: 1; min-width: 0; }
+
+.fp-tl-card {
+  background: #fafafa;
+  border-radius: 16rpx;
+  padding: 16rpx 20rpx;
+}
+
+.fp-tl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4rpx;
+}
+
+.fp-tl-place {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: #1a1a1a;
+}
+
+.fp-tl-date {
+  font-size: 20rpx;
+  color: #bbb;
+}
+
+.fp-tl-loc {
+  font-size: 22rpx;
+  color: #999;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.fp-tl-note {
+  font-size: 24rpx;
+  color: #666;
+  display: block;
+  line-height: 1.5;
+  margin-bottom: 8rpx;
+}
+
+.fp-tl-photo {
+  width: 100%;
+  height: 200rpx;
+  border-radius: 12rpx;
+  margin-top: 8rpx;
+}
+
+/* ====== 城市排行 ====== */
+.fp-city-rank { padding: 8rpx 0; }
+
+.fp-city-rank-item {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.rank-index {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22rpx;
+  font-weight: 800;
+  color: #999;
+  flex-shrink: 0;
+}
+
+.rank-index.top1 { background: #FFF7E6; color: #FA8C16; }
+.rank-index.top2 { background: #E6F7FF; color: #1890FF; }
+.rank-index.top3 { background: #F6FFED; color: #52C41A; }
+
+.rank-city-name {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #333;
+  width: 120rpx;
+  flex-shrink: 0;
+}
+
+.rank-bar-wrap {
+  flex: 1;
+  height: 12rpx;
+  background: #f0f0f0;
+  border-radius: 6rpx;
+  overflow: hidden;
+}
+
+.rank-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366F1, #A78BFA);
+  border-radius: 6rpx;
+  transition: width 0.4s ease;
+}
+
+.rank-count {
+  font-size: 22rpx;
+  color: #6366F1;
+  font-weight: 700;
+  width: 64rpx;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ====== 省份网格 ====== */
+.fp-province-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  padding: 8rpx 0;
+}
+
+.fp-prov-card {
+  width: calc(33.33% - 8rpx);
+  background: #f9f9f9;
+  border-radius: 14rpx;
+  padding: 16rpx 8rpx 12rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+  border: 1rpx solid transparent;
+  transition: all 0.2s ease;
+}
+
+.fp-prov-card.lit {
+  background: linear-gradient(135deg, #FFFBE6, #FFF7E6);
+  border-color: #FFE58F;
+}
+
+.prov-status-icon { font-size: 30rpx; }
+.prov-name {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #555;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  text-align: center;
+}
+.prov-count { font-size: 20rpx; color: #6366F1; font-weight: 700; }
+.prov-building { font-size: 17rpx; color: #AAA; }
+
+/* ====== 飞行路线 ====== */
+.fp-flight-list { padding: 8rpx 0; }
+
+.fp-flight-seg {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 16rpx;
+  background: linear-gradient(135deg, #F8FAFC, #EFF6FF);
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
+  border-left: 4rpx solid #6366F1;
+  gap: 16rpx;
+}
+
+.flight-dep,
+.flight-arr {
+  min-width: 140rpx;
+}
+
+.flight-city {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: #1a1a1a;
+  display: block;
+}
+
+.flight-time {
+  font-size: 20rpx;
+  color: #999;
+  display: block;
+  margin-top: 2rpx;
+}
+
+.flight-line-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+  position: relative;
+}
+
+.flight-plane {
+  font-size: 28rpx;
+  z-index: 2;
+}
+
+.flight-dash-line {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1rpx;
+  background: repeating-linear-gradient(
+    to right,
+    #6366F1 0,
+    #6366F1 12rpx,
+    transparent 12rpx,
+    transparent 20rpx
+  );
+}
+
+/* 空状态 */
+.fp-empty-tip {
+  padding: 80rpx 0 40rpx;
+  text-align: center;
+}
+.empty-icon { font-size: 72rpx; display: block; margin-bottom: 16rpx; }
+.empty-text { font-size: 26rpx; color: #bbb; }
+
+/* ====== 回忆模式 ====== */
+/* 回忆状态栏 */
+.memory-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin: 12rpx 20rpx 0;
+  padding: 14rpx 20rpx;
+  background: rgba(99,102,241,0.15);
+  border-radius: 14rpx;
+  backdrop-filter: blur(8px);
+}
+.memory-status-text {
+  flex: 1;
+  font-size: 22rpx;
+  color: rgba(255,255,255,0.95);
+  font-weight: 600;
+}
+.memory-status-count {
+  font-size: 20rpx;
+  color: #FFD700;
+  font-weight: 700;
+}
+.memory-reset-btn {
+  padding: 8rpx 16rpx;
+  background: rgba(255,255,255,0.2);
+  border-radius: 20rpx;
+  color: #fff;
+  font-size: 20rpx;
+  border: none;
+}
+.memory-reset-btn::after { border: none; }
+
+/* 回忆日期选择器 */
+.memory-date-picker {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.memory-date-picker.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+.memory-picker-mask {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+}
+.memory-picker-content {
+  position: relative;
+  width: 600rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 40rpx 32rpx 32rpx;
+  z-index: 2;
+}
+.memory-picker-title {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #1a1a1a;
+  display: block;
+}
+.memory-picker-sub {
+  font-size: 24rpx;
+  color: #999;
+  display: block;
+  margin-top: 8rpx;
+  margin-bottom: 28rpx;
+}
+.memory-picker-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.memory-picker-label {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 600;
+}
+.memory-date-input {
+  padding: 12rpx 24rpx;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  color: #6366F1;
+  font-weight: 600;
+}
+.memory-picker-btns {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 32rpx;
+}
+.memory-picker-cancel {
+  flex: 1;
+  height: 80rpx;
+  line-height: 80rpx;
+  border-radius: 20rpx;
+  background: #f5f5f5;
+  color: #666;
+  font-size: 28rpx;
+  border: none;
+}
+.memory-picker-cancel::after { border: none; }
+.memory-picker-apply {
+  flex: 2;
+  height: 80rpx;
+  line-height: 80rpx;
+  border-radius: 20rpx;
+  background: linear-gradient(135deg, #6366F1, #818CF8);
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 700;
+  border: none;
+}
+.memory-picker-apply::after { border: none; }
+
+/* 回忆模式面板 */
+.memory-panel {
+  padding: 8rpx 0;
+}
+.memory-desc-card {
+  display: flex;
+  gap: 16rpx;
+  padding: 20rpx;
+  background: linear-gradient(135deg, #F8FAFC, #EEF2FF);
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+}
+.memory-desc-icon {
+  font-size: 48rpx;
+  flex-shrink: 0;
+}
+.memory-desc-info {}
+.memory-desc-title {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: #1a1a1a;
+  display: block;
+}
+.memory-desc-text {
+  font-size: 22rpx;
+  color: #888;
+  display: block;
+  margin-top: 6rpx;
+  line-height: 1.4;
+}
+.memory-start-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  padding: 28rpx;
+  background: linear-gradient(135deg, #6366F1, #818CF8);
+  border-radius: 20rpx;
+  color: #fff;
+  font-size: 30rpx;
+  font-weight: 700;
+  border: none;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(99,102,241,0.3);
+}
+.memory-start-btn::after { border: none; }
+.memory-btn-icon { font-size: 32rpx; }
+
+.memory-active-section {
+  background: linear-gradient(135deg, #FFFBE6, #FFF7E6);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  border: 1rpx solid #FFE58F;
+}
+.memory-active-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  margin-bottom: 12rpx;
+}
+.memory-active-title {
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #D48806;
+}
+.memory-active-range {
+  font-size: 24rpx;
+  color: #FA8C16;
+  font-weight: 600;
+}
+.memory-active-stats {
+  font-size: 22rpx;
+  color: #999;
+  margin-bottom: 20rpx;
+}
+.memory-replay-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx;
+  background: linear-gradient(135deg, #6366F1, #818CF8);
+  border-radius: 16rpx;
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 700;
+  border: none;
+  margin-bottom: 12rpx;
+}
+.memory-replay-btn::after { border: none; }
+.memory-replay-btn.playing {
+  background: linear-gradient(135deg, #EF4444, #F87171);
+}
+.memory-exit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx;
+  background: transparent;
+  border: 1rpx solid #E5E7EB;
+  border-radius: 16rpx;
+  color: #999;
+  font-size: 24rpx;
+  border: 1rpx solid #E5E7EB;
+}
+.memory-exit-btn::after { border: none; }
+
+.memory-empty-tip {
+  text-align: center;
+  padding: 60rpx 0;
+}
+.memory-empty-icon {
+  font-size: 72rpx;
+  display: block;
+  margin-bottom: 16rpx;
+}
+.memory-empty-title {
+  font-size: 28rpx;
+  color: #999;
+  font-weight: 600;
+  display: block;
+}
+.memory-empty-desc {
+  font-size: 22rpx;
+  color: #bbb;
+  display: block;
+  margin-top: 8rpx;
+}

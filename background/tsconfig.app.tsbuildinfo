@@ -1,0 +1,1 @@
+{"root":["./src/main.ts","./src/vite-env.d.ts","./src/api/cloudbase.ts","./src/router/index.ts","./src/stores/auth.ts","./src/app.vue","./src/views/dashboard.vue","./src/views/layout.vue","./src/views/login.vue","./src/views/categories/categorymanage.vue","./src/views/journeys/journeymanage.vue"],"errors":true,"version":"5.6.3"}

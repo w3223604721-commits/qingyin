@@ -1,0 +1,46 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/journal/journal",
+    "pages/checkin/checkin",
+    "pages/share/share",
+    "pages/profile/profile",
+    "pages/journey-detail/journey-detail",
+    "pages/diary-edit/diary-edit",
+    "pages/medals/medals",
+    "pages/insights/insights",
+    "pages/settings/settings",
+    "pages/footprint-report/footprint-report"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#6366F1",
+    "navigationBarTitleText": "轻印 - 旅行记忆",
+    "navigationBarTextStyle": "white"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#999999",
+    "selectedColor": "#6366F1",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      { "pagePath": "pages/journal/journal", "text": "日志" },
+      { "pagePath": "pages/checkin/checkin", "text": "打卡" },
+      { "pagePath": "pages/share/share", "text": "分享" },
+      { "pagePath": "pages/profile/profile", "text": "我的" }
+    ]
+  },
+  "usingComponents": {
+    "custom-tab-bar": "/components/custom-tab-bar/index",
+    "privacy-agreement": "/components/privacy-agreement/index"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents",
+  "permission": {
+    "scope.userLocation": {
+      "desc": "需要获取你的位置信息来记录足迹和打卡"
+    }
+  }
+}

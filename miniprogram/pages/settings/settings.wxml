@@ -1,0 +1,182 @@
+<!-- 设置页面 -->
+<view class="settings-page">
+  <view class="settings-header">
+    <button class="btn-back" bindtap="goBack">
+      <text class="back-icon">‹</text>
+      <text>返回</text>
+    </button>
+    <text class="settings-title">⚙️ 设置</text>
+  </view>
+
+  <view class="settings-body">
+    <!-- 账号与安全 -->
+    <view class="setting-item" bindtap="openAccount">
+      <view class="setting-info">
+        <text class="setting-label">账号与安全</text>
+        <text class="setting-desc">本地账户信息、数据存储方式</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+
+    <!-- 行程回收站 -->
+    <view class="setting-item" bindtap="openTrash">
+      <view class="setting-info">
+        <text class="setting-label">行程回收站</text>
+        <text class="setting-desc">恢复已删除的旅程</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+
+    <!-- 权限管理 -->
+    <view class="setting-item" bindtap="openPermissions">
+      <view class="setting-info">
+        <text class="setting-label">权限管理</text>
+        <text class="setting-desc">管理通知、位置、照片、相机权限</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+
+    <!-- 反馈 -->
+    <view class="setting-item" bindtap="openFeedback">
+      <view class="setting-info">
+        <text class="setting-label">和开发者聊聊天</text>
+        <text class="setting-desc">反馈建议 & 问题报告</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+
+    <!-- 版本信息 -->
+    <view class="setting-item" bindtap="showVersion">
+      <view class="setting-info">
+        <text class="setting-label">版本信息</text>
+        <text class="setting-desc">v2.0.0 Build 2026.06</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+
+    <!-- 清除所有数据 -->
+    <view class="setting-item danger" bindtap="clearAllData">
+      <view class="setting-info">
+        <text class="setting-label danger-text">清除所有数据</text>
+        <text class="setting-desc">此操作不可恢复</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 账号与安全子页面 -->
+  <view class="sub-page" wx:if="{{showAccount}}">
+    <view class="sub-page-header">
+      <button class="btn-back" bindtap="closeSubPage">
+        <text class="back-icon">‹</text>
+        <text>返回</text>
+      </button>
+      <text class="sub-page-title">账号与安全</text>
+    </view>
+    <view class="sub-page-body">
+      <view class="account-card">
+        <view class="account-row">
+          <text class="account-label">设备 ID</text>
+          <text class="account-value">{{deviceId}}</text>
+        </view>
+        <view class="account-row">
+          <text class="account-label">账户创建时间</text>
+          <text class="account-value">{{createdTime}}</text>
+        </view>
+        <view class="account-row">
+          <text class="account-label">存储方式</text>
+          <text class="account-value">本地存储</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 回收站子页面 -->
+  <view class="sub-page" wx:if="{{showTrash}}">
+    <view class="sub-page-header">
+      <button class="btn-back" bindtap="closeSubPage">
+        <text class="back-icon">‹</text>
+        <text>返回</text>
+      </button>
+      <text class="sub-page-title">行程回收站</text>
+    </view>
+    <view class="sub-page-body">
+      <view class="empty-state" wx:if="{{trashItems.length === 0}}">
+        <text class="empty-icon">🗑️</text>
+        <text class="empty-text">回收站是空的</text>
+      </view>
+      <view class="trash-item" wx:for="{{trashItems}}" wx:key="id">
+        <view class="trash-item-info">
+          <text class="trash-item-name">{{item.name}}</text>
+          <text class="trash-item-time">删除于 {{item.deletedAt}}</text>
+        </view>
+        <view class="trash-actions">
+          <button class="btn-restore" bindtap="restoreTrash" data-index="{{index}}">恢复</button>
+          <button class="btn-delete-forever" bindtap="permanentDelete" data-index="{{index}}">永久删除</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 权限管理子页面 -->
+  <view class="sub-page" wx:if="{{showPermissions}}">
+    <view class="sub-page-header">
+      <button class="btn-back" bindtap="closeSubPage">
+        <text class="back-icon">‹</text>
+        <text>返回</text>
+      </button>
+      <text class="sub-page-title">权限管理</text>
+    </view>
+    <view class="sub-page-body">
+      <view class="permission-list">
+        <view class="permission-row" wx:for="{{permissions}}" wx:key="key">
+          <view class="permission-info">
+            <text class="permission-name">{{item.name}}</text>
+            <text class="permission-desc">{{item.desc}}</text>
+          </view>
+          <view class="permission-actions">
+            <switch
+              checked="{{item.granted}}"
+              bindchange="togglePermission"
+              data-key="{{item.key}}"
+              color="#6366F1"
+            />
+            <text class="perm-reset-btn" bindtap="resetPermission" data-key="{{item.key}}">重置</text>
+          </view>
+        </view>
+      </view>
+      <view class="permission-hint">
+        <text>💡 开关控制权限请求，点击「重置」可重新授权。已拒绝的权限需前往系统设置开启。</text>
+      </view>
+      <button class="btn-open-setting" bindtap="openSystemSetting">⚙️ 打开系统设置</button>
+    </view>
+  </view>
+
+  <!-- 反馈子页面 -->
+  <view class="sub-page" wx:if="{{showFeedback}}">
+    <view class="sub-page-header">
+      <button class="btn-back" bindtap="closeSubPage">
+        <text class="back-icon">‹</text>
+        <text>返回</text>
+      </button>
+      <text class="sub-page-title">反馈</text>
+    </view>
+    <view class="sub-page-body">
+      <view class="form-group">
+        <text class="form-label">反馈类型</text>
+        <picker mode="selector" range="{{feedbackTypes}}" bindchange="onFeedbackType">
+          <view class="picker-display">{{feedbackType}}</view>
+        </picker>
+      </view>
+      <view class="form-group">
+        <text class="form-label">反馈内容</text>
+        <textarea class="form-textarea" value="{{feedbackContent}}" placeholder="请详细描述你的问题或建议..." maxlength="500" bindinput="onFeedbackInput"/>
+      </view>
+      <view class="form-group">
+        <text class="form-label">联系方式（选填）</text>
+        <input class="form-input" value="{{feedbackContact}}" placeholder="邮箱或微信号" bindinput="onFeedbackContact"/>
+      </view>
+      <button class="btn-primary btn-block" bindtap="submitFeedback">提交反馈</button>
+    </view>
+  </view>
+</view>

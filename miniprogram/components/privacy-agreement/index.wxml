@@ -1,0 +1,72 @@
+<!-- 隐私协议弹窗组件 -->
+<view class="privacy-overlay {{show ? 'show' : ''}}" wx:if="{{show}}" bindtap="onClose">
+  <view class="privacy-container" catchtap="noop">
+    <view class="privacy-header">
+      <text class="privacy-logo">🛡️</text>
+      <text class="privacy-title">欢迎使用轻印</text>
+    </view>
+    
+    <view class="privacy-body">
+      <text class="privacy-subtitle">用户服务与隐私协议</text>
+      
+      <scroll-view scroll-y class="privacy-scroll" style="max-height:400rpx;">
+        <text class="privacy-content">
+感谢您选择轻印旅行记忆！在使用本应用前，请仔细阅读以下协议：
+
+【用户服务协议】
+
+1. 服务说明
+轻印是一款旅行记录工具，帮助您记录旅程、打卡足迹、珍藏照片和文字记忆。
+
+2. 账号与登录
+您可以通过微信登录或手机号登录使用本应用。您的账号数据安全存储在云端，支持跨设备同步。
+
+3. 用户行为规范
+• 您对上传的内容（包括但不限于照片、文字）负全部法律责任
+• 请勿上传任何违法违规内容
+• 尊重他人隐私，不要上传包含他人敏感信息的内容
+• 禁止利用本应用进行任何商业推广行为
+
+4. 服务变更与终止
+我们保留随时修改或终止服务的权利，会提前通知用户。
+
+【隐私政策】
+
+1. 我们收集的信息
+• 微信 OpenID（用于身份识别）
+• 手机号码（可选，用于账号绑定和数据迁移）
+• 您主动创建的旅程、打卡、日记、照片等旅行记录
+
+2. 信息使用方式
+• 提供核心功能（记录、存储、展示您的旅行数据）
+• 数据云端备份和多设备同步
+• 改进产品体验（匿名统计数据）
+
+3. 我们不会
+• 出售或向第三方共享您的个人数据
+• 在未经您许可的情况下分享您的信息
+• 收集与服务无关的额外信息
+
+4. 数据存储安全
+您的数据存储在腾讯云数据库中，采用 HTTPS 加密传输。
+
+5. 儿童隐私保护
+我们非常重视儿童个人信息保护。若用户为14周岁以下未成年人，请在监护人陪同下阅读并同意本政策。
+
+6. 您的权利
+• 查看、导出您自己的所有数据
+• 清除本地和云端的个人数据
+• 注销账号（请联系客服）
+
+7. 联系方式
+如有疑问，请在「设置」-「和开发者聊聊天」中反馈。
+        </text>
+      </scroll-view>
+    </view>
+
+    <view class="privacy-footer">
+      <button class="btn-disagree" bindtap="onDisagree">不同意</button>
+      <button class="btn-agree" bindtap="onAgree">同意并继续</button>
+    </view>
+  </view>
+</view>

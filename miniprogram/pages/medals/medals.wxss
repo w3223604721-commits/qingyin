@@ -1,0 +1,156 @@
+.medals-page {
+  min-height: 100vh;
+  background: var(--bg-primary);
+  padding-bottom: 40rpx;
+}
+
+.medals-header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark, #4F46E5));
+  padding: 40rpx 28rpx 32rpx;
+  color: #fff;
+}
+
+.medals-header-top {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.btn-back {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  border: none;
+  padding: 8rpx 16rpx;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+}
+
+.btn-back::after { border: none; }
+
+.back-icon {
+  font-size: 36rpx;
+  line-height: 1;
+}
+
+.medals-title {
+  font-size: 36rpx;
+  font-weight: 900;
+}
+
+.medals-stats {
+  margin-top: 24rpx;
+  text-align: center;
+}
+
+.medals-lit-count {
+  font-size: 72rpx;
+  font-weight: 900;
+}
+
+.medals-total-count {
+  font-size: 36rpx;
+  opacity: 0.6;
+}
+
+.medals-percent {
+  font-size: 28rpx;
+  opacity: 0.7;
+}
+
+.medals-progress {
+  margin-top: 12rpx;
+  height: 8rpx;
+  background: rgba(255,255,255,0.2);
+  border-radius: 4rpx;
+  overflow: hidden;
+}
+
+.medals-progress-bar {
+  height: 100%;
+  background: #fff;
+  border-radius: 4rpx;
+  transition: width 0.5s ease;
+}
+
+/* 筛选按钮 */
+.medal-filters {
+  display: flex;
+  gap: 12rpx;
+  padding: 20rpx 28rpx;
+}
+
+.filter-btn {
+  padding: 12rpx 28rpx;
+  border-radius: 24rpx;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 24rpx;
+  border: none;
+  font-weight: 500;
+}
+
+.filter-btn::after { border: none; }
+
+.filter-btn.active {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* 勋章网格 */
+.medal-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  padding: 0 28rpx;
+}
+
+.medal-item {
+  width: calc(25% - 12rpx);
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 20rpx 8rpx;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.medal-item.unlit {
+  opacity: 0.45;
+}
+
+.medal-icon-lg {
+  font-size: 52rpx;
+  display: block;
+  margin-bottom: 6rpx;
+}
+
+.medal-name {
+  font-size: 20rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.medal-building {
+  font-size: 18rpx;
+  color: var(--text-muted);
+  margin-top: 2rpx;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.medal-lit-mark {
+  position: absolute;
+  top: 4rpx;
+  right: 8rpx;
+  font-size: 24rpx;
+}
