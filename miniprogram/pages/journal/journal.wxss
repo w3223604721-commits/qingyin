@@ -1,177 +1,26 @@
-.journal-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
-}
-.journey-card {
-  background: var(--bg-primary);
-  border: 1rpx solid var(--border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  position: relative;
-  box-shadow: var(--shadow-sm);
-}
-.journey-card::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 6rpx;
-  background: linear-gradient(180deg, var(--primary), var(--primary-light));
-  border-radius: 3rpx;
-}
-.journey-cover {
-  width: 100%;
-  height: 280rpx;
-}
-.journey-card-body {
-  padding: 24rpx 28rpx 24rpx 36rpx;
-}
-.journey-card-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 12rpx;
-}
-.journey-name {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: var(--text-primary);
-  flex: 1;
-}
-.journey-menu {
-  font-size: 36rpx;
-  color: var(--text-muted);
-  padding: 0 16rpx;
-  line-height: 1;
-}
-.journey-meta {
-  display: flex;
-  gap: 24rpx;
-  font-size: 24rpx;
-  color: var(--text-muted);
-  margin-bottom: 8rpx;
-}
-.journey-desc {
-  font-size: 26rpx;
-  color: var(--text-secondary);
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.journey-tags {
-  display: flex;
-  flex-wrap: wrap;
-  margin-top: 16rpx;
-}
-
-/* 模态框滚动区域 */
-.modal-scroll {
-  max-height: 55vh;
-}
-
-/* 日期行：并排对齐 */
-.date-row {
-  display: flex;
-  align-items: stretch;
-  margin-bottom: 24rpx;
-}
-.form-group-half {
-  flex: 1;
-  min-width: 0;
-  margin-bottom: 0 !important;
-  box-sizing: border-box;
-}
-.form-row-gap {
-  width: 20rpx;
-  flex-shrink: 0;
-}
-
-/* 日期选择器输入框样式对齐 */
-.form-input-picker {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-height: 68rpx;
-  padding: 20rpx 24rpx;
-  color: var(--text-primary);
-  font-size: 28rpx;
-  box-sizing: border-box;
-}
-
-/* 封面图片上传 */
-.photo-cover-preview {
-  width: 100%;
-  height: 240rpx;
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  position: relative;
-}
-.photo-cover-preview image {
-  width: 100%;
-  height: 100%;
-}
-.photo-change-hint {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(0,0,0,0.55);
-  color: #fff;
-  text-align: center;
-  padding: 8rpx;
-  font-size: 22rpx;
-}
-.photo-cover-empty {
-  width: 100%;
-  height: 240rpx;
-  border: 2rpx dashed var(--border);
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  font-size: 26rpx;
-}
-
-/* 按钮禁用状态 */
-.btn-primary[disabled], .btn-secondary[disabled] {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-/* 搜索栏 */
-.search-bar-wrap {
-  padding: 16rpx 28rpx 0;
-}
-.search-bar {
-  display: flex;
-  align-items: center;
-  background: #fff;
-  border-radius: 14rpx;
-  padding: 16rpx 20rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
-  gap: 12rpx;
-}
-.search-icon {
-  font-size: 28rpx;
-  flex-shrink: 0;
-}
-.search-input {
-  flex: 1;
-  font-size: 28rpx;
-  color: var(--text-primary);
-}
-.search-clear {
-  width: 40rpx;
-  height: 40rpx;
-  border-radius: 50%;
-  background: #f0f0f0;
-  font-size: 24rpx;
-  color: #999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
+.journal-list { display: flex; flex-direction: column; gap: 20rpx; }
+.journey-card { background: var(--bg-primary); border: 1rpx solid var(--border); border-radius: var(--radius-lg); overflow: hidden; position: relative; box-shadow: var(--shadow-sm); }
+.journey-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6rpx; background: linear-gradient(180deg, var(--primary), var(--primary-light)); border-radius: 3rpx; }
+.journey-cover { width: 100%; height: 280rpx; }
+.journey-card-body { padding: 24rpx 28rpx 24rpx 36rpx; }
+.journey-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12rpx; }
+.journey-name { font-size: 32rpx; font-weight: 700; color: var(--text-primary); flex: 1; }
+.journey-menu { font-size: 36rpx; color: var(--text-muted); padding: 0 16rpx; line-height: 1; }
+.journey-meta { display: flex; gap: 24rpx; font-size: 24rpx; color: var(--text-muted); margin-bottom: 8rpx; }
+.journey-desc { font-size: 26rpx; color: var(--text-secondary); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.journey-tags { display: flex; flex-wrap: wrap; margin-top: 16rpx; }
+.modal-scroll { max-height: 55vh; }
+.date-row { display: flex; align-items: stretch; margin-bottom: 24rpx; }
+.form-group-half { flex: 1; min-width: 0; margin-bottom: 0 !important; box-sizing: border-box; }
+.form-row-gap { width: 20rpx; flex-shrink: 0; }
+.form-input-picker { display: flex; align-items: center; width: 100%; min-height: 68rpx; padding: 20rpx 24rpx; color: var(--text-primary); font-size: 28rpx; box-sizing: border-box; }
+.photo-cover-preview { width: 100%; height: 240rpx; border-radius: var(--radius-sm); overflow: hidden; position: relative; }
+.photo-cover-preview image { width: 100%; height: 100%; }
+.photo-change-hint { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.55); color: #fff; text-align: center; padding: 8rpx; font-size: 22rpx; }
+.photo-cover-empty { width: 100%; height: 240rpx; border: 2rpx dashed var(--border); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 26rpx; }
+.btn-primary[disabled], .btn-secondary[disabled] { opacity: 0.5; pointer-events: none; }
+.search-bar-wrap { padding: 16rpx 28rpx 0; }
+.search-bar { display: flex; align-items: center; background: #fff; border-radius: 14rpx; padding: 16rpx 20rpx; box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04); gap: 12rpx; }
+.search-icon { font-size: 28rpx; flex-shrink: 0; }
+.search-input { flex: 1; font-size: 28rpx; color: var(--text-primary); }
+.search-clear { width: 40rpx; height: 40rpx; border-radius: 50%; background: #f0f0f0; font-size: 24rpx; color: #999; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }

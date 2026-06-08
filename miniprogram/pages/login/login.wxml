@@ -1,133 +1,32 @@
-<!-- 登录页面 - 轻印旅行记忆 -->
 <view class="login-page">
-  <!-- 顶部装饰 -->
   <view class="login-header">
     <view class="header-bg-circle circle-1"></view>
     <view class="header-bg-circle circle-2"></view>
     <view class="header-bg-circle circle-3"></view>
   </view>
-
-  <!-- 主内容区 -->
   <view class="login-body">
-    <!-- Logo 区域 -->
     <view class="logo-area">
-      <view class="logo-icon-wrap">
-        <text class="logo-icon">✈️</text>
-      </view>
+      <view class="logo-icon-wrap"><text class="logo-icon">✈️</text></view>
       <text class="logo-title">轻印</text>
       <text class="logo-subtitle">记录每一段旅程，留下美好足迹</text>
     </view>
-
-    <!-- 登录表单区域 -->
     <view class="form-section" wx:if="{{!loggingIn}}">
-      <!-- 微信一键登录（主推方式）-->
-      <button
-        class="btn-wechat-login {{!agreePrivacy ? 'disabled' : ''}}"
-        disabled="{{!agreePrivacy || loggingIn}}"
-        bindtap="onWechatLogin"
-      >
-        <text class="wechat-logo">微信</text>
-        <text>微信快捷登录</text>
+      <button class="btn-wechat-login {{!agreePrivacy ? 'disabled' : ''}}" disabled="{{!agreePrivacy || loggingIn}}" bindtap="onWechatLogin">
+        <text class="wechat-logo">微信</text><text>微信快捷登录</text>
       </button>
-
-      <!-- 分割线 -->
-      <view class="divider-row">
-        <view class="divider-line"></view>
-        <text class="divider-text">或</text>
-        <view class="divider-line"></view>
-      </view>
-
-      <!-- 账号输入 -->
+      <view class="divider-row"><view class="divider-line"></view><text class="divider-text">或</text><view class="divider-line"></view></view>
       <view class="input-group">
-        <view class="input-wrap">
-          <text class="input-icon">👤</text>
-          <input
-            class="form-input"
-            type="text"
-            placeholder="用户名 / 手机号"
-            maxlength="30"
-            value="{{inputAccount}}"
-            bindinput="onAccountInput"
-          />
-        </view>
-        <view class="input-wrap">
-          <text class="input-icon">🔒</text>
-          <input
-            class="form-input"
-            type="text"
-            password="{{!showPassword}}"
-            placeholder="密码"
-            maxlength="20"
-            value="{{inputPassword}}"
-            bindinput="onPasswordInput"
-          />
-          <view class="pwd-toggle" bindtap="togglePassword">
-            <text>{{showPassword ? '🙈' : '👁'}}</text>
-          </view>
-        </view>
+        <view class="input-wrap"><text class="input-icon">👤</text><input class="form-input" type="text" placeholder="用户名 / 手机号" maxlength="30" value="{{inputAccount}}" bindinput="onAccountInput"/></view>
+        <view class="input-wrap"><text class="input-icon">🔒</text><input class="form-input" type="text" password="{{!showPassword}}" placeholder="密码" maxlength="20" value="{{inputPassword}}" bindinput="onPasswordInput"/><view class="pwd-toggle" bindtap="togglePassword"><text>{{showPassword ? '🙈' : '👁'}}</text></view></view>
       </view>
-
-      <!-- 登录按钮 -->
-      <button
-        class="btn-form-login {{!agreePrivacy ? 'disabled' : ''}} {{loggingIn ? 'logging' : ''}}"
-        disabled="{{!agreePrivacy || loggingIn}}"
-        bindtap="handleLogin"
-      >
-        {{loggingIn ? '登录中...' : '登 录'}}
-      </button>
-
-      <!-- 底部链接 -->
-      <view class="bottom-links">
-        <text class="link-text" bindtap="openUserAgreement">忘记密码？</text>
-        <text class="link-divider">|</text>
-        <text class="link-text" bindtap="showRegisterTips">创建账号</text>
-      </view>
-
-      <!-- 协议勾选 -->
+      <button class="btn-form-login {{!agreePrivacy ? 'disabled' : ''}} {{loggingIn ? 'logging' : ''}}" disabled="{{!agreePrivacy || loggingIn}}" bindtap="handleLogin">{{loggingIn ? '登录中...' : '登 录'}}</button>
+      <view class="bottom-links"><text class="link-text" bindtap="openUserAgreement">忘记密码？</text><text class="link-divider">|</text><text class="link-text" bindtap="showRegisterTips">创建账号</text></view>
       <view class="agreement" catchtap="toggleAgreement">
-        <view class="check-box {{agreePrivacy ? 'checked' : ''}}">
-          <text wx:if="{{agreePrivacy}}" class="check-mark">✓</text>
-        </view>
-        <text class="agree-text">
-          我已阅读并同意
-          <text class="agree-link" catchtap="openUserAgreement">《用户协议》</text>
-          和
-          <text class="agree-link" catchtap="openPrivacyPolicy">《隐私政策》</text>
-        </text>
+        <view class="check-box {{agreePrivacy ? 'checked' : ''}}"><text wx:if="{{agreePrivacy}}" class="check-mark">✓</text></view>
+        <text class="agree-text">我已阅读并同意<text class="agree-link" catchtap="openUserAgreement">《用户协议》</text>和<text class="agree-link" catchtap="openPrivacyPolicy">《隐私政策》</text></text>
       </view>
     </view>
-
-    <!-- 加载中状态 -->
-    <view class="loading-section" wx:if="{{loggingIn}}">
-      <view class="loading-spinner"></view>
-      <text class="loading-text">正在连接...</text>
-    </view>
+    <view class="loading-section" wx:if="{{loggingIn}}"><view class="loading-spinner"></view><text class="loading-text">正在连接...</text></view>
   </view>
-
-  <!-- 底部品牌 -->
-  <view class="footer-brand">
-    <text class="footer-text">轻印 · 旅行记忆</text>
-  </view>
-
-  <!-- 手机号弹窗（保留但简化） -->
-  <view class="modal-mask" wx:if="{{showPhoneModal}}" bindtap="closePhoneModal">
-    <view class="modal-content" catchtap="noop">
-      <view class="modal-head">
-        <text class="modal-title">手机号登录</text>
-        <text class="modal-close" bindtap="closePhoneModal">✕</text>
-      </view>
-      <view class="modal-body">
-        <input class="modal-input" type="number" placeholder="请输入手机号" maxlength="11" value="{{inputPhone}}" bindinput="onPhoneInput" />
-        <view class="code-row">
-          <input class="modal-input code-input" type="number" placeholder="验证码" maxlength="6" value="{{inputCode}}" bindinput="onCodeInput" />
-          <button class="btn-code {{codeSending ? 'disabled' : ''}}" bindtap="sendCode">
-            {{codeSending ? countdown + 's' : '获取验证码'}}
-          </button>
-        </view>
-      </view>
-      <view class="modal-foot">
-        <button class="btn-modal-submit {{!inputPhone || inputCode.length < 4 ? 'disabled' : ''}}" bindtap="submitPhoneLogin">登录</button>
-      </view>
-    </view>
-  </view>
+  <view class="footer-brand"><text class="footer-text">轻印 · 旅行记忆</text></view>
 </view>

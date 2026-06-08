@@ -1,129 +1,23 @@
 <view class="page-container">
-  <!-- 页面头部 -->
   <view class="page-header" style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;">
-    <view>
-      <text class="page-header-title">📖 我的旅程</text>
-      <text class="page-header-sub">记录每一段旅程</text>
-    </view>
+    <view><text class="page-header-title">📖 我的旅程</text><text class="page-header-sub">记录每一段旅程</text></view>
   </view>
-
-  <!-- 搜索栏 -->
   <view class="search-bar-wrap">
-    <view class="search-bar">
-      <text class="search-icon">🔍</text>
-      <input class="search-input" value="{{searchQuery}}" placeholder="搜索旅程名称、城市..." bindinput="onSearchInput" confirm-type="search"/>
-      <text wx:if="{{searchQuery}}" class="search-clear" bindtap="clearSearch">✕</text>
-    </view>
+    <view class="search-bar"><text class="search-icon">🔍</text><input class="search-input" value="{{searchQuery}}" placeholder="搜索旅程名称、城市..." bindinput="onSearchInput" confirm-type="search"/><text wx:if="{{searchQuery}}" class="search-clear" bindtap="clearSearch">✕</text></view>
   </view>
-
-  <!-- 旅程列表 -->
-  <view wx:if="{{filteredJourneys.length === 0 && journeys.length > 0}}" class="empty-state">
-    <text class="empty-icon">🔍</text>
-    <text class="empty-title">未找到匹配的旅程</text>
-    <text class="empty-desc">尝试更换关键词</text>
-  </view>
-  <view wx:elif="{{journeys.length === 0}}" class="empty-state">
-    <text class="empty-icon">🗺️</text>
-    <text class="empty-title">还没有旅程记录</text>
-    <text class="empty-desc">点击右下角 + 开启你的第一段旅程吧</text>
-  </view>
-
+  <view wx:if="{{filteredJourneys.length === 0 && journeys.length > 0}}" class="empty-state"><text class="empty-icon">🔍</text><text class="empty-title">未找到匹配的旅程</text><text class="empty-desc">尝试更换关键词</text></view>
+  <view wx:elif="{{journeys.length === 0}}" class="empty-state"><text class="empty-icon">🗺️</text><text class="empty-title">还没有旅程记录</text><text class="empty-desc">点击右下角 + 开启你的第一段旅程吧</text></view>
   <view wx:else class="journal-list">
-    <view
-      wx:for="{{filteredJourneys}}"
-      wx:key="id"
-      class="journey-card {{item.coverPhoto ? 'has-cover' : ''}}"
-      bindtap="goDetail"
-      data-id="{{item.id}}"
-    >
-      <!-- 封面图 -->
+    <view wx:for="{{filteredJourneys}}" wx:key="id" class="journey-card {{item.coverPhoto ? 'has-cover' : ''}}" bindtap="goDetail" data-id="{{item.id}}">
       <image wx:if="{{item.coverPhoto}}" class="journey-cover" src="{{item.coverPhoto}}" mode="aspectFill" />
-      <!-- 内容 -->
       <view class="journey-card-body">
-        <view class="journey-card-header">
-          <text class="journey-name">{{item.name}}</text>
-          <view class="journey-menu" catchtap="showMenu" data-id="{{item.id}}">⋯</view>
-        </view>
-        <view class="journey-meta">
-          <text>{{app.formatDateRange(item.startDate, item.endDate)}}</text>
-          <text wx:if="{{item.days.length}}"> · {{item.days.length}} 天</text>
-        </view>
+        <view class="journey-card-header"><text class="journey-name">{{item.name}}</text><view class="journey-menu" catchtap="showMenu" data-id="{{item.id}}">⋯</view></view>
+        <view class="journey-meta"><text>{{app.formatDateRange(item.startDate, item.endDate)}}</text><text wx:if="{{item.days.length}}"> · {{item.days.length}} 天</text></view>
         <text wx:if="{{item.desc}}" class="journey-desc">{{item.desc}}</text>
-        <view wx:if="{{item.city}}" class="journey-tags">
-          <text wx:for="{{item.city.split(',')}}" wx:key="*this" wx:if="{{item}}" class="tag">{{item.trim()}}</text>
-        </view>
+        <view wx:if="{{item.city}}" class="journey-tags"><text wx:for="{{item.city.split(',')}}" wx:key="*this" wx:if="{{item}}" class="tag">{{item.trim()}}</text></view>
       </view>
     </view>
   </view>
-
-  <!-- FAB -->
   <button class="fab" bindtap="openCreate" hover-class="fab-hover">＋</button>
-
-  <!-- ====== 创建/编辑旅程模态框 ====== -->
-  <view wx:if="{{showModal}}" class="modal-mask" bindtap="closeModal" catchtouchmove="noop">
-    <view class="modal-content" catchtap="noop">
-      <view class="modal-header">
-        <text class="modal-title">{{editingId ? '编辑旅程' : '新建旅程'}}</text>
-        <text class="modal-close" bindtap="closeModal">✕</text>
-      </view>
-      <scroll-view scroll-y="true" class="modal-scroll">
-        <view class="form-group">
-          <text class="form-label">旅程名称 *</text>
-          <input class="form-input" value="{{form.name}}" placeholder="如：夏日北海道之旅" maxlength="30" bindinput="onField" data-field="name" />
-        </view>
-        <view class="form-group">
-          <text class="form-label">目的地城市</text>
-          <input class="form-input" value="{{form.city}}" placeholder="如：札幌、小樽" maxlength="50" bindinput="onField" data-field="city" />
-        </view>
-        <!-- 日期行：并排显示、中间留空隙、左右对齐 -->
-        <view class="form-row date-row">
-          <view class="form-group form-group-half">
-            <text class="form-label">开始日期</text>
-            <picker mode="date" value="{{form.startDate}}" bindchange="onDateChange" data-field="startDate">
-              <view class="form-input form-input-picker">{{form.startDate || '请选择'}}</view>
-            </picker>
-          </view>
-          <view class="form-row-gap"></view>
-          <view class="form-group form-group-half">
-            <text class="form-label">结束日期</text>
-            <picker mode="date" value="{{form.endDate}}" bindchange="onDateChange" data-field="endDate">
-              <view class="form-input form-input-picker">{{form.endDate || '请选择'}}</view>
-            </picker>
-          </view>
-        </view>
-        <view class="form-group">
-          <text class="form-label">简介</text>
-          <textarea class="form-textarea" value="{{form.desc}}" placeholder="记录这段旅程的美好..." maxlength="200" bindinput="onField" data-field="desc" />
-        </view>
-        <view class="form-group">
-          <text class="form-label">封面图片 (可选)</text>
-          <view wx:if="{{form.coverPhoto}}" class="photo-cover-preview" bindtap="chooseCover">
-            <image src="{{form.coverPhoto}}" mode="aspectFill" />
-            <text class="photo-change-hint">点击更换</text>
-          </view>
-          <view wx:else class="photo-cover-empty" bindtap="chooseCover">
-            <text>📷 点击上传封面</text>
-          </view>
-        </view>
-      </scroll-view>
-      <view class="modal-footer">
-        <button class="btn-secondary" bindtap="closeModal" disabled="{{saving}}">取消</button>
-        <button class="btn-primary" bindtap="saveJourney" disabled="{{saving}}">保存</button>
-      </view>
-    </view>
-  </view>
-
-  <!-- ====== 旅程操作菜单 ====== -->
-  <view wx:if="{{showMenuModal}}" class="modal-mask" bindtap="closeMenu">
-    <view class="modal-content" style="border-radius:24rpx 24rpx 0 0;">
-      <view style="display:flex;flex-direction:column;gap:8rpx;">
-        <button class="btn-primary" bindtap="editJourney">✏️ 编辑</button>
-        <button class="btn-secondary" bindtap="deleteJourney" style="color:var(--danger);">🗑️ 删除</button>
-        <button class="btn-secondary" bindtap="closeMenu">取消</button>
-      </view>
-    </view>
-  </view>
 </view>
-
-<!-- 自定义 TabBar -->
 <custom-tab-bar selected="{{0}}" />
