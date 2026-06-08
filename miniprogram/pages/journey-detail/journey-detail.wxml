@@ -11,8 +11,7 @@
     <swiper class="carousel-swiper" current="{{carouselIndex}}" bindchange="onSwiperChange"
             indicator-dots indicator-color="rgba(255,255,255,0.4)"
             indicator-active-color="#fff" autoplay circular
-            interval="3000" duration="300"
-            bindanimationfinish="onSwiperAnimationFinish">
+            interval="3000" duration="300">
       <swiper-item wx:for="{{carouselPhotos}}" wx:key="index">
         <image src="{{item}}" mode="aspectFill" class="carousel-img" />
         <view class="carousel-overlay">{{carouselLabels[index]}}</view>

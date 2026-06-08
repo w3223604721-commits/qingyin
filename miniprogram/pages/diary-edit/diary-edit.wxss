@@ -51,18 +51,6 @@
   box-sizing: border-box;
 }
 
-.form-input.picker {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: var(--primary);
-}
-
-.form-input .arrow {
-  font-size: 36rpx;
-  color: var(--text-muted);
-}
-
 .form-textarea {
   width: 100%;
   padding: 20rpx 24rpx;
