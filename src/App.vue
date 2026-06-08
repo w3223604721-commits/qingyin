@@ -5,7 +5,6 @@
         <component :is="Component" />
       </transition>
     </router-view>
-
     <!-- 底部 Tab 导航（后台页面不显示） -->
     <nav v-if="!isAdminRoute" class="tab-bar">
       <div

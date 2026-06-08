@@ -55,27 +55,15 @@ const router = createRouter({
 
 // 路由守卫：需要登录的页面未登录则跳转登录页
 router.beforeEach(async (to, _from, next) => {
-  // 登录页面不需要检查登录态
-  if (to.meta.noAuth) {
-    next();
-    return;
-  }
-
+  if (to.meta.noAuth) { next(); return; }
   try {
     const { checkLogin } = await import("./utils/cloudbase");
     const result = await checkLogin();
-    if (!result.isLoggedIn) {
-      next("/login");
-    } else {
-      next();
-    }
-  } catch {
-    // 检查失败时允许通过（降级到本地模式）
-    next();
-  }
+    if (!result.isLoggedIn) { next("/login"); }
+    else { next(); }
+  } catch { next(); }
 });
 
-// 创建应用实例
 const app = createApp(App);
 app.use(router);
 app.mount("#app");
