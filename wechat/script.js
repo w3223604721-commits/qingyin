@@ -56,11 +56,14 @@ async function doLogin() {
   if (!username || !password) { showLoginError('请输入用户名和密码'); return; }
   if (!$('loginAgreed').checked) { showLoginError('请先阅读并同意用户协议和隐私声明'); return; }
   hideLoginError();
-  $('btnLoginSubmit').disabled = true;
-  $('btnLoginSubmit').textContent = '登录中...';
+  var btn = $('btnLoginSubmit');
+  btn.disabled = true;
+  btn.textContent = '登录中...';
   try {
+    console.log('[Login] Sending request for user:', username);
     const data = await apiCall('/api/login', { username, password });
-    if (data.ok) {
+    console.log('[Login] Response:', JSON.stringify(data));
+    if (data && data.ok) {
       setToken(data.token);
       localStorage.setItem('qingyin_user', JSON.stringify(data.user));
       // 同步昵称到本地
@@ -69,23 +72,41 @@ async function doLogin() {
         saveData(appData);
       }
       hideLogin();
+      // 确保主内容可见
+      var appContent = $('appContent');
+      if (appContent) { appContent.style.display = 'block'; }
       initApp();
       showToast('登录成功', 'success');
     } else {
       // 区分不同错误类型给出明确提示
       var errMsg = '账号或密码错误';
-      if (data.error) {
-        if (data.error.indexOf('删除') > -1) errMsg = data.error;
-        else if (data.error.indexOf('冻结') > -1) errMsg = data.error;
+      if (data && data.error) {
+        if (data.error.indexOf('删除') > -1 || data.error.indexOf('冻结') > -1) errMsg = data.error;
         else if (data.error.indexOf('密码') > -1 || data.error.indexOf('用户名') > -1) errMsg = data.error;
+        else if (data.error.indexOf('不存在') > -1) errMsg = data.error;
       }
+      console.error('[Login] Error:', errMsg);
       showLoginError(errMsg);
+      shakeLoginCard && shakeLoginCard();
     }
   } catch(e) {
-    console.error('[Login] error:', e);
+    console.error('[Login] Exception:', e.message);
     showLoginError('网络连接失败（'+e.message+'），请稍后重试');
-  } finally { $('btnLoginSubmit').disabled = false; $('btnLoginSubmit').textContent = '登录'; }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '登录';
+  }
 }
+
+// 登录/注册卡片抖动动画（用于错误提示）
+function shakeLoginCard() {
+  var card = document.querySelector('.login-container') || document.querySelector('.login-overlay');
+  if (!card) return;
+  card.style.animation = 'none';
+  card.offsetHeight; // 触发 reflow
+  card.style.animation = 'loginShake 0.5s ease';
+}
+// 注册 CSS 中添加 @keyframes loginShake
 
 async function doRegister() {
   const username = $('regUsername').value.trim();
@@ -99,32 +120,66 @@ async function doRegister() {
   if (securityAnswer.length < 2) { showRegisterError('密保答案至少2个字符'); return; }
   if (password.length < 6) { showRegisterError('密码至少需要6位'); return; }
   hideLoginError();
-  $('btnRegSubmit').disabled = true;
-  $('btnRegSubmit').textContent = '注册中...';
+  var btn = $('btnRegSubmit');
+  btn.disabled = true;
+  btn.textContent = '注册中...';
   try {
+    console.log('[Register] Sending request for user:', username);
     const data = await apiCall('/api/register', { username, password, securityQuestion, securityAnswer });
-    if (data.ok) {
+    console.log('[Register] Response:', JSON.stringify(data));
+    if (data && data.ok) {
+      // 注册成功
       setToken(data.token);
       localStorage.setItem('qingyin_user', JSON.stringify(data.user));
       if (data.user && data.user.nickname) {
         appData.profile.name = data.user.nickname;
         saveData(appData);
       }
+      // 先隐藏登录覆盖层，再初始化应用
       hideLogin();
+      // 确保 appContent 可见
+      var appContent = $('appContent');
+      if (appContent) { appContent.style.display = 'block'; }
+      var bottomNav = document.querySelector('.bottom-nav');
+      if (bottomNav) { bottomNav.style.display = 'flex'; }
+      var fabBtn = $('fabBtn');
+      if (fabBtn) { fabBtn.style.display = 'flex'; }
+      // 初始化应用
       initApp();
       showToast('注册成功！欢迎加入轻印', 'success');
     } else {
-      showRegisterError(data.error || '注册失败：' + JSON.stringify(data));
+      // 注册失败
+      var errorMsg = '注册失败';
+      if (data && data.error) {
+        errorMsg = data.error;
+      } else if (data) {
+        errorMsg = '服务器返回异常：' + JSON.stringify(data).substring(0, 100);
+      }
+      console.error('[Register] Server error:', errorMsg);
+      showRegisterError(errorMsg);
+      shakeLoginCard && shakeLoginCard();
     }
   } catch(e) {
-    console.error('[Register] error:', e);
-    showRegisterError('网络连接失败（'+e.message+'），请稍后重试');
-  } finally { $('btnRegSubmit').disabled = false; $('btnRegSubmit').textContent = '注册并登录'; }
+    console.error('[Register] Exception:', e.message, e.stack);
+    showRegisterError('网络连接失败（'+e.message+'），请检查网络后重试');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '注册并登录';
+  }
 }
 
 function showRegisterError(msg) {
+  console.log('[showRegisterError]', msg);
   var el = $('registerFormError');
-  if (el) { el.textContent = msg; el.style.display = 'block'; }
+  if (!el) { console.warn('[showRegisterError] #registerFormError not found!'); return; }
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.background = '#FFF0F0';
+  el.style.color = '#E74C3C';
+  // 确保错误信息在视口内
+  setTimeout(function() {
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 50);
 }
 
 // ── 忘记密码流程 ──
