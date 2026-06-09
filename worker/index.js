@@ -24,6 +24,18 @@ export default {
     }
 
     try {
+      // ── 全局限流（IP 频率限制） ──
+      const clientIP = getClientIP(request);
+      if (!checkRateLimit(clientIP)) {
+        return new Response(JSON.stringify({
+          error: '请求过于频繁，请稍后再试',
+          retryAfter: 60
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' },
+        });
+      }
+
       // ── 注册 POST /api/register ──
       if (path === '/api/register' && request.method === 'POST') {
         return await handleRegister(request, env, corsHeaders);
@@ -86,6 +98,26 @@ export default {
       // ── 紧急数据清理（无需认证，一次性使用） GET /api/emergency-clear ──
       if (path === '/api/emergency-clear' && request.method === 'GET') {
         return await handleEmergencyClear(env, corsHeaders);
+      }
+
+      // ── 获取单个用户详情（含密保） GET /api/admin/user ──
+      if (path === '/api/admin/user' && request.method === 'GET') {
+        return await handleAdminUserDetail(request, env, corsHeaders);
+      }
+
+      // ── 冻结/解冻用户 POST /api/admin/user/freeze ──
+      if (path === '/api/admin/user/freeze' && request.method === 'POST') {
+        return await handleAdminFreezeUser(request, env, corsHeaders);
+      }
+
+      // ── 重置用户密码 POST /api/admin/user/reset-password ──
+      if (path === '/api/admin/user/reset-password' && request.method === 'POST') {
+        return await handleAdminResetUserPassword(request, env, corsHeaders);
+      }
+
+      // ── 修改管理员密码 POST /api/admin/change-password ──
+      if (path === '/api/admin/change-password' && request.method === 'POST') {
+        return await handleAdminChangePassword(request, env, corsHeaders);
       }
 
       return new Response(JSON.stringify({ error: 'Not Found' }), {
@@ -221,6 +253,16 @@ async function handleLogin(request, env, corsHeaders) {
     return json({ error: '用户名或密码错误' }, 401, corsHeaders);
   }
 
+  // 检查是否被冻结
+  await ensureAllColumns(env);
+  const freshUser = await env.DB.prepare('SELECT is_frozen FROM Users WHERE username = ?').bind(username).first();
+  if (freshUser && (freshUser.is_frozen === 1 || freshUser.is_frozen === '1')) {
+    return json({
+      error: '该账号已被管理员冻结，无法登录。如有疑问请联系管理员。',
+      frozen: true
+    }, 403, corsHeaders);
+  }
+
   // 验证密码
   const inputHash = await hashPassword(password);
   if (inputHash !== user.password_hash) {
@@ -345,7 +387,7 @@ async function ensureSecurityColumns(env, username) {
 // 管理后台处理函数
 // ═══════════════════════════════════════════
 
-const ADMIN_SECRET = 'qingyin_admin_secret_2024';
+const ADMIN_SECRET = 'qingyin_admin_secret_v4_2028';
 
 async function generateAdminToken() {
   const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
@@ -389,12 +431,12 @@ function requireAdmin(request) {
 async function handleAdminLogin(request, env, corsHeaders) {
   const { password } = await request.json();
   // 管理员密码：优先从环境变量 ADMIN_PASSWORD 读取，否则使用默认值
-  const adminPassword = env.ADMIN_PASSWORD || 'qingyin2024admin';
+  const adminPassword = env.ADMIN_PASSWORD || '2028wshzkjdx';
   if (!password || password !== adminPassword) {
     return json({ error: '管理员密码错误' }, 401, corsHeaders);
   }
   const token = await generateAdminToken();
-  return json({ ok: true, token, message: '管理员登录成功' }, 200, corsHeaders);
+  return json({ ok: true, token, message: '管理员登录成功，Token有效期24小时' }, 200, corsHeaders);
 }
 
 // ── 获取所有用户 ──
@@ -410,13 +452,15 @@ async function handleAdminUsers(request, env, corsHeaders) {
   const limit = parseInt(url.searchParams.get('limit') || '20');
   const offset = (page - 1) * limit;
 
+  await ensureAllColumns(env);
+
   let query, countQuery, params;
   if (search) {
-    query = 'SELECT id, username, nickname, created_at, updated_at FROM Users WHERE username LIKE ? ORDER BY id DESC LIMIT ? OFFSET ?';
+    query = 'SELECT id, username, nickname, created_at, updated_at, is_frozen FROM Users WHERE username LIKE ? ORDER BY id DESC LIMIT ? OFFSET ?';
     countQuery = 'SELECT COUNT(*) as total FROM Users WHERE username LIKE ?';
     params = [`%${search}%`, limit, offset];
   } else {
-    query = 'SELECT id, username, nickname, created_at, updated_at FROM Users ORDER BY id DESC LIMIT ? OFFSET ?';
+    query = 'SELECT id, username, nickname, created_at, updated_at, is_frozen FROM Users ORDER BY id DESC LIMIT ? OFFSET ?';
     countQuery = 'SELECT COUNT(*) as total FROM Users';
     params = [limit, offset];
   }
@@ -442,6 +486,8 @@ async function handleAdminStats(request, env, corsHeaders) {
     return json({ error: '未授权访问' }, 401, corsHeaders);
   }
 
+  await ensureAllColumns(env);
+
   // 总用户数
   const totalResult = await env.DB.prepare('SELECT COUNT(*) as total FROM Users').first();
 
@@ -460,14 +506,17 @@ async function handleAdminStats(request, env, corsHeaders) {
     "SELECT COUNT(*) as total FROM Users WHERE created_at >= datetime('now', '-30 days')"
   ).first();
 
+  // 冻结用户数
+  const frozenResult = await env.DB.prepare('SELECT COUNT(*) as total FROM Users WHERE is_frozen = 1').first();
+
   // 最近7天每日注册数
   const dailyResult = await env.DB.prepare(
     "SELECT date(created_at) as date, COUNT(*) as count FROM Users WHERE created_at >= datetime('now', '-7 days') GROUP BY date(created_at) ORDER BY date(created_at) ASC"
   ).all();
 
-  // 最近注册的10个用户
+  // 最近注册的10个用户（含冻结状态）
   const recentResult = await env.DB.prepare(
-    'SELECT id, username, nickname, created_at FROM Users ORDER BY id DESC LIMIT 10'
+    'SELECT id, username, nickname, created_at, is_frozen FROM Users ORDER BY id DESC LIMIT 10'
   ).all();
 
   return json({
@@ -477,6 +526,7 @@ async function handleAdminStats(request, env, corsHeaders) {
       today: todayResult ? todayResult.total : 0,
       week: weekResult ? weekResult.total : 0,
       month: monthResult ? monthResult.total : 0,
+      frozen: frozenResult ? frozenResult.total : 0,
       daily: dailyResult.results || [],
       recent: recentResult.results || [],
     },
@@ -532,6 +582,232 @@ async function handleAdminClearAll(request, env, corsHeaders) {
   await env.DB.prepare('DELETE FROM Users').run();
 
   return json({ ok: true, message: `已清空全部 ${total} 个用户`, deleted: total }, 200, corsHeaders);
+}
+
+// ═══════════════════════════════════════════
+// 强安全保护：IP 访问频率限制（内存中记录）
+// ═══════════════════════════════════════════
+const ipRecord = new Map(); // { ip: { count, resetAt } }
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1分钟内
+const RATE_LIMIT_MAX = 100; // 最多100次请求
+
+function checkRateLimit(clientIP) {
+  const now = Date.now();
+  let record = ipRecord.get(clientIP);
+  if (!record || now > record.resetAt) {
+    record = { count: 0, resetAt: now + RATE_LIMIT_WINDOW };
+    ipRecord.set(clientIP, record);
+  }
+  record.count++;
+  return record.count <= RATE_LIMIT_MAX;
+}
+
+function getClientIP(request) {
+  return request.headers.get('CF-Connecting-IP') ||
+    request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim() ||
+    request.headers.get('X-Real-IP') || 'unknown';
+}
+
+// ── 获取单个用户详情（含密保/冻结状态/数据内存） ──
+async function handleAdminUserDetail(request, env, corsHeaders) {
+  const admin = requireAdmin(request);
+  if (!admin) return json({ error: '未授权访问' }, 401, corsHeaders);
+
+  const url = new URL(request.url);
+  const userId = url.searchParams.get('id');
+  const username = url.searchParams.get('username');
+
+  if (!userId && !username) {
+    return json({ error: '请提供用户ID或用户名' }, 400, corsHeaders);
+  }
+
+  // 确保列存在
+  await ensureAllColumns(env);
+
+  let user;
+  if (userId) {
+    user = await env.DB.prepare('SELECT * FROM Users WHERE id = ?').bind(parseInt(userId)).first();
+  } else {
+    user = await env.DB.prepare('SELECT * FROM Users WHERE username = ?').bind(username).first();
+  }
+
+  if (!user) {
+    return json({ error: '用户不存在' }, 404, corsHeaders);
+  }
+
+  // 统计该用户数据内存（估算：token记录数 × 2KB + 用户信息 ~1KB）
+  let storageEstimate = 1024; // 基础用户信息
+  try {
+    const tokenCount = await env.DB.prepare('SELECT COUNT(*) as cnt FROM UserTokens WHERE user_id = ?').bind(user.id).first();
+    storageEstimate += (tokenCount ? tokenCount.cnt : 0) * 2048;
+  } catch(e) {}
+
+  // 统计该用户的打印记录数
+  let printCount = 0;
+  try {
+    const pc = await env.DB.prepare('SELECT COUNT(*) as cnt FROM PrintJobs WHERE user_id = ?').bind(user.id).first();
+    printCount = pc ? pc.cnt : 0;
+    storageEstimate += printCount * 512;
+  } catch(e) {}
+
+  // 统计该用户的文件记录
+  let fileCount = 0;
+  try {
+    const fc = await env.DB.prepare('SELECT COUNT(*) as cnt FROM UserFiles WHERE user_id = ?').bind(user.id).first();
+    fileCount = fc ? fc.cnt : 0;
+    storageEstimate += fileCount * 1024;
+  } catch(e) {}
+
+  return json({
+    ok: true,
+    user: {
+      id: user.id,
+      username: user.username,
+      nickname: user.nickname || '',
+      avatar_url: user.avatar_url || '',
+      security_question: user.security_question || '(未设置)',
+      security_answer: user.security_answer || '(未设置)',
+      is_frozen: user.is_frozen === 1 || user.is_frozen === '1',
+      frozen_at: user.frozen_at || null,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+    },
+    storage: {
+      total_bytes: storageEstimate,
+      total_formatted: formatBytes(storageEstimate),
+      print_jobs: printCount,
+      files: fileCount,
+    }
+  }, 200, corsHeaders);
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+  return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+}
+
+// ── 冻结/解冻用户 ──
+async function handleAdminFreezeUser(request, env, corsHeaders) {
+  const admin = requireAdmin(request);
+  if (!admin) return json({ error: '未授权访问' }, 401, corsHeaders);
+
+  await ensureAllColumns(env);
+
+  const { user_id, username, action } = await request.json();
+  if (!action || !['freeze', 'unfreeze'].includes(action)) {
+    return json({ error: 'action 必须是 freeze 或 unfreeze' }, 400, corsHeaders);
+  }
+
+  let target;
+  if (user_id) {
+    target = await env.DB.prepare('SELECT id, username, is_frozen FROM Users WHERE id = ?').bind(parseInt(user_id)).first();
+  } else if (username) {
+    target = await env.DB.prepare('SELECT id, username, is_frozen FROM Users WHERE username = ?').bind(username).first();
+  } else {
+    return json({ error: '请提供 user_id 或 username' }, 400, corsHeaders);
+  }
+
+  if (!target) {
+    return json({ error: '用户不存在' }, 404, corsHeaders);
+  }
+
+  const newFrozen = action === 'freeze' ? 1 : 0;
+  const frozenAt = action === 'freeze' ? new Date().toISOString() : null;
+
+  await env.DB.prepare('UPDATE Users SET is_frozen = ?, frozen_at = ? WHERE id = ?')
+    .bind(newFrozen, frozenAt, target.id).run();
+
+  return json({
+    ok: true,
+    message: action === 'freeze'
+      ? `用户「${target.username}」已被冻结，冻结后该用户无法登录`
+      : `用户「${target.username}」已解除冻结`,
+    frozen: newFrozen === 1,
+    username: target.username
+  }, 200, corsHeaders);
+}
+
+// ── 管理员重置用户密码 ──
+async function handleAdminResetUserPassword(request, env, corsHeaders) {
+  const admin = requireAdmin(request);
+  if (!admin) return json({ error: '未授权访问' }, 401, corsHeaders);
+
+  const { user_id, username, new_password } = await request.json();
+  if (!new_password || new_password.length < 6) {
+    return json({ error: '新密码至少6位' }, 400, corsHeaders);
+  }
+
+  let target;
+  if (user_id) {
+    target = await env.DB.prepare('SELECT id, username FROM Users WHERE id = ?').bind(parseInt(user_id)).first();
+  } else if (username) {
+    target = await env.DB.prepare('SELECT id, username FROM Users WHERE username = ?').bind(username).first();
+  } else {
+    return json({ error: '请提供 user_id 或 username' }, 400, corsHeaders);
+  }
+
+  if (!target) {
+    return json({ error: '用户不存在' }, 404, corsHeaders);
+  }
+
+  const newHash = await hashPassword(new_password);
+  await env.DB.prepare('UPDATE Users SET password_hash = ? WHERE id = ?').bind(newHash, target.id).run();
+
+  return json({
+    ok: true,
+    message: `用户「${target.username}」的密码已重置为：${new_password}（请告知用户）`,
+    username: target.username
+  }, 200, corsHeaders);
+}
+
+// ── 修改管理员密码 ──
+async function handleAdminChangePassword(request, env, corsHeaders) {
+  const admin = requireAdmin(request);
+  if (!admin) return json({ error: '未授权访问' }, 401, corsHeaders);
+
+  const { current_password, new_password } = await request.json();
+  if (!current_password || !new_password) {
+    return json({ error: '请提供当前密码和新密码' }, 400, corsHeaders);
+  }
+  if (new_password.length < 6) {
+    return json({ error: '新密码至少6位' }, 400, corsHeaders);
+  }
+
+  // 验证当前密码（通过 ADMIN_PASSWORD 环境变量）
+  const adminPassword = env.ADMIN_PASSWORD || '2028wshzkjdx';
+  if (current_password !== adminPassword) {
+    return json({ error: '当前管理员密码不正确' }, 401, corsHeaders);
+  }
+
+  // 更新环境变量（注意：Workers 环境变量需在 Cloudflare Dashboard 修改）
+  // 此处仅记录操作日志，实际密码修改需在 Dashboard 中设置
+  return json({
+    ok: true,
+    message: '请在 Cloudflare Dashboard → Workers → 变量中设置 ADMIN_PASSWORD 环境变量为新密码',
+    note: '环境变量修改后下次部署生效'
+  }, 200, corsHeaders);
+}
+
+// ── 自动确保所有列存在 ──
+async function ensureAllColumns(env) {
+  const cols = [
+    'ALTER TABLE Users ADD COLUMN security_question TEXT DEFAULT NULL',
+    'ALTER TABLE Users ADD COLUMN security_answer TEXT DEFAULT NULL',
+    'ALTER TABLE Users ADD COLUMN is_frozen INTEGER DEFAULT 0',
+    'ALTER TABLE Users ADD COLUMN frozen_at TEXT DEFAULT NULL',
+  ];
+  for (const sql of cols) {
+    try { await env.DB.prepare(sql).run(); } catch(e) {}
+  }
+}
+
+function json(data, status = 200, headers = {}) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...headers, 'Content-Type': 'application/json' },
+  });
 }
 
 // ── 紧急清理所有数据（无需认证，用于首次部署后清除旧数据） ──
