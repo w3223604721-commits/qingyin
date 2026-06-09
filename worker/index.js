@@ -85,14 +85,29 @@ export default {
         return await handleAdminStats(request, env, corsHeaders);
       }
 
-      // ── 删除用户 DELETE /api/admin/users ──
+      // ── 软删除用户 DELETE /api/admin/users ──
       if (path === '/api/admin/users' && request.method === 'DELETE') {
-        return await handleAdminDeleteUser(request, env, corsHeaders);
+        return await handleAdminSoftDeleteUser(request, env, corsHeaders);
       }
 
       // ── 清空所有用户 DELETE /api/admin/clear-all ──
       if (path === '/api/admin/clear-all' && request.method === 'DELETE') {
         return await handleAdminClearAll(request, env, corsHeaders);
+      }
+
+      // ── 回收站列表 GET /api/admin/trash ──
+      if (path === '/api/admin/trash' && request.method === 'GET') {
+        return await handleAdminTrashList(request, env, corsHeaders);
+      }
+
+      // ── 恢复用户 POST /api/admin/user/restore ──
+      if (path === '/api/admin/user/restore' && request.method === 'POST') {
+        return await handleAdminRestoreUser(request, env, corsHeaders);
+      }
+
+      // ── 彻底清除已删除用户 DELETE /api/admin/trash-purge ──
+      if (path === '/api/admin/trash-purge' && request.method === 'DELETE') {
+        return await handleAdminTrashPurge(request, env, corsHeaders);
       }
 
       // ── 紧急数据清理（无需认证，一次性使用） GET /api/emergency-clear ──
@@ -244,12 +259,20 @@ async function handleLogin(request, env, corsHeaders) {
     return json({ error: '请输入用户名和密码' }, 400, corsHeaders);
   }
 
-  // 查找用户
+  // 查找用户（排除已删除）
   const user = await env.DB.prepare(
-    'SELECT * FROM Users WHERE username = ?'
+    'SELECT * FROM Users WHERE username = ? AND deleted_at IS NULL'
   ).bind(username).first();
 
   if (!user) {
+    // 检查是否是已删除用户
+    await ensureAllColumns(env);
+    const deletedCheck = await env.DB.prepare(
+      'SELECT id, deleted_at FROM Users WHERE username = ? AND deleted_at IS NOT NULL'
+    ).bind(username).first();
+    if (deletedCheck) {
+      return json({ error: '该账号已被管理员删除，无法登录。如有疑问请联系管理员。', deleted: true }, 401, corsHeaders);
+    }
     return json({ error: '用户名或密码错误' }, 401, corsHeaders);
   }
 
@@ -457,7 +480,7 @@ async function handleAdminLogin(request, env, corsHeaders) {
   return json({ ok: true, token, message: '管理员登录成功，Token有效期24小时' }, 200, corsHeaders);
 }
 
-// ── 获取所有用户 ──
+// ── 获取所有用户（支持过滤：all/today/week/month/frozen，排除已删除） ──
 async function handleAdminUsers(request, env, corsHeaders) {
   const admin = requireAdmin(request);
   if (!admin) {
@@ -468,24 +491,46 @@ async function handleAdminUsers(request, env, corsHeaders) {
   const search = url.searchParams.get('search') || '';
   const page = parseInt(url.searchParams.get('page') || '1');
   const limit = parseInt(url.searchParams.get('limit') || '20');
+  const filter = url.searchParams.get('filter') || 'all'; // all/today/week/month/frozen
   const offset = (page - 1) * limit;
 
   await ensureAllColumns(env);
 
-  let query, countQuery, params;
-  if (search) {
-    query = 'SELECT id, username, nickname, created_at, updated_at, is_frozen FROM Users WHERE username LIKE ? ORDER BY id DESC LIMIT ? OFFSET ?';
-    countQuery = 'SELECT COUNT(*) as total FROM Users WHERE username LIKE ?';
-    params = [`%${search}%`, limit, offset];
-  } else {
-    query = 'SELECT id, username, nickname, created_at, updated_at, is_frozen FROM Users ORDER BY id DESC LIMIT ? OFFSET ?';
-    countQuery = 'SELECT COUNT(*) as total FROM Users';
-    params = [limit, offset];
+  // 基础条件：排除已删除用户
+  let whereClause = 'WHERE deleted_at IS NULL';
+  let countWhereClause = 'WHERE deleted_at IS NULL';
+  let params = [limit, offset];
+  let countParams = [];
+
+  // 过滤条件
+  if (filter === 'today') {
+    whereClause += " AND date(created_at) = date('now')";
+    countWhereClause += " AND date(created_at) = date('now')";
+  } else if (filter === 'week') {
+    whereClause += " AND created_at >= datetime('now', '-7 days')";
+    countWhereClause += " AND created_at >= datetime('now', '-7 days')";
+  } else if (filter === 'month') {
+    whereClause += " AND created_at >= datetime('now', '-30 days')";
+    countWhereClause += " AND created_at >= datetime('now', '-30 days')";
+  } else if (filter === 'frozen') {
+    whereClause += ' AND is_frozen = 1';
+    countWhereClause += ' AND is_frozen = 1';
   }
 
+  // 搜索条件
+  if (search) {
+    whereClause += ' AND username LIKE ?';
+    countWhereClause += ' AND username LIKE ?';
+    params.unshift(`%${search}%`);
+    countParams.push(`%${search}%`);
+  }
+
+  const query = `SELECT id, username, nickname, created_at, updated_at, is_frozen FROM Users ${whereClause} ORDER BY id DESC LIMIT ? OFFSET ?`;
+  const countQuery = `SELECT COUNT(*) as total FROM Users ${countWhereClause}`;
+
   const usersResult = await env.DB.prepare(query).bind(...params).all();
-  const countResult = search
-    ? await env.DB.prepare(countQuery).bind(`%${search}%`).first()
+  const countResult = countParams.length > 0
+    ? await env.DB.prepare(countQuery).bind(...countParams).first()
     : await env.DB.prepare(countQuery).first();
 
   return json({
@@ -494,10 +539,11 @@ async function handleAdminUsers(request, env, corsHeaders) {
     total: countResult ? countResult.total : 0,
     page,
     limit,
+    filter,
   }, 200, corsHeaders);
 }
 
-// ── 获取统计数据 ──
+// ── 获取统计数据（排除软删除用户） ──
 async function handleAdminStats(request, env, corsHeaders) {
   const admin = requireAdmin(request);
   if (!admin) {
@@ -506,35 +552,38 @@ async function handleAdminStats(request, env, corsHeaders) {
 
   await ensureAllColumns(env);
 
-  // 总用户数
-  const totalResult = await env.DB.prepare('SELECT COUNT(*) as total FROM Users').first();
+  // 总用户数（排除已删除）
+  const totalResult = await env.DB.prepare("SELECT COUNT(*) as total FROM Users WHERE deleted_at IS NULL").first();
 
   // 今日注册
   const todayResult = await env.DB.prepare(
-    "SELECT COUNT(*) as total FROM Users WHERE date(created_at) = date('now')"
+    "SELECT COUNT(*) as total FROM Users WHERE date(created_at) = date('now') AND deleted_at IS NULL"
   ).first();
 
   // 本周注册
   const weekResult = await env.DB.prepare(
-    "SELECT COUNT(*) as total FROM Users WHERE created_at >= datetime('now', '-7 days')"
+    "SELECT COUNT(*) as total FROM Users WHERE created_at >= datetime('now', '-7 days') AND deleted_at IS NULL"
   ).first();
 
   // 本月注册
   const monthResult = await env.DB.prepare(
-    "SELECT COUNT(*) as total FROM Users WHERE created_at >= datetime('now', '-30 days')"
+    "SELECT COUNT(*) as total FROM Users WHERE created_at >= datetime('now', '-30 days') AND deleted_at IS NULL"
   ).first();
 
-  // 冻结用户数
-  const frozenResult = await env.DB.prepare('SELECT COUNT(*) as total FROM Users WHERE is_frozen = 1').first();
+  // 冻结用户数（排除已删除）
+  const frozenResult = await env.DB.prepare('SELECT COUNT(*) as total FROM Users WHERE is_frozen = 1 AND deleted_at IS NULL').first();
+
+  // 已删除用户数（回收站）
+  const deletedResult = await env.DB.prepare('SELECT COUNT(*) as total FROM Users WHERE deleted_at IS NOT NULL').first();
 
   // 最近7天每日注册数
   const dailyResult = await env.DB.prepare(
-    "SELECT date(created_at) as date, COUNT(*) as count FROM Users WHERE created_at >= datetime('now', '-7 days') GROUP BY date(created_at) ORDER BY date(created_at) ASC"
+    "SELECT date(created_at) as date, COUNT(*) as count FROM Users WHERE created_at >= datetime('now', '-7 days') AND deleted_at IS NULL GROUP BY date(created_at) ORDER BY date(created_at) ASC"
   ).all();
 
-  // 最近注册的10个用户（含冻结状态）
+  // 最近注册的10个用户（含冻结状态，排除已删除）
   const recentResult = await env.DB.prepare(
-    'SELECT id, username, nickname, created_at, is_frozen FROM Users ORDER BY id DESC LIMIT 10'
+    'SELECT id, username, nickname, created_at, is_frozen FROM Users WHERE deleted_at IS NULL ORDER BY id DESC LIMIT 10'
   ).all();
 
   return json({
@@ -545,14 +594,15 @@ async function handleAdminStats(request, env, corsHeaders) {
       week: weekResult ? weekResult.total : 0,
       month: monthResult ? monthResult.total : 0,
       frozen: frozenResult ? frozenResult.total : 0,
+      deleted: deletedResult ? deletedResult.total : 0,
       daily: dailyResult.results || [],
       recent: recentResult.results || [],
     },
   }, 200, corsHeaders);
 }
 
-// ── 删除用户 ──
-async function handleAdminDeleteUser(request, env, corsHeaders) {
+// ── 软删除用户（移入回收站，7天保留期） ──
+async function handleAdminSoftDeleteUser(request, env, corsHeaders) {
   const admin = requireAdmin(request);
   if (!admin) {
     return json({ error: '未授权访问' }, 401, corsHeaders);
@@ -577,9 +627,149 @@ async function handleAdminDeleteUser(request, env, corsHeaders) {
     return json({ error: '用户不存在' }, 404, corsHeaders);
   }
 
-  await env.DB.prepare('DELETE FROM Users WHERE id = ?').bind(target.id).run();
+  // 软删除：设置 deleted_at 时间戳
+  await ensureAllColumns(env);
+  const now = new Date().toISOString();
+  await env.DB.prepare('UPDATE Users SET deleted_at = ? WHERE id = ?')
+    .bind(now, target.id).run();
 
-  return json({ ok: true, message: `用户「${target.username}」已删除`, deleted: target }, 200, corsHeaders);
+  return json({
+    ok: true,
+    message: `用户「${target.username}」已移入回收站（7天内可恢复）`,
+    deleted_at: now,
+    restore_deadline: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
+    username: target.username
+  }, 200, corsHeaders);
+}
+
+// ── 回收站列表 ──
+async function handleAdminTrashList(request, env, corsHeaders) {
+  const admin = requireAdmin(request);
+  if (!admin) return json({ error: '未授权访问' }, 401, corsHeaders);
+
+  await ensureAllColumns(env);
+
+  const url = new URL(request.url);
+  const page = parseInt(url.searchParams.get('page') || '1');
+  const limit = parseInt(url.searchParams.get('limit') || '20');
+  const offset = (page - 1) * limit;
+
+  const usersResult = await env.DB.prepare(
+    'SELECT id, username, nickname, created_at, deleted_at, is_frozen FROM Users WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC LIMIT ? OFFSET ?'
+  ).bind(limit, offset).all();
+
+  const countResult = await env.DB.prepare(
+    'SELECT COUNT(*) as total FROM Users WHERE deleted_at IS NOT NULL'
+  ).first();
+
+  // 计算每个用户的剩余恢复时间
+  const users = (usersResult.results || []).map(u => {
+    const deletedAt = new Date(u.deleted_at);
+    const expireAt = new Date(deletedAt.getTime() + 7 * 24 * 3600 * 1000);
+    const remainingMs = expireAt - Date.now();
+    return {
+      ...u,
+      expires_at: expireAt.toISOString(),
+      can_restore: remainingMs > 0,
+      remaining_hours: Math.max(0, Math.ceil(remainingMs / 3600000)),
+      expired: remainingMs <= 0,
+    };
+  });
+
+  return json({
+    ok: true,
+    users,
+    total: countResult ? countResult.total : 0,
+    page,
+    limit,
+  }, 200, corsHeaders);
+}
+
+// ── 恢复用户（从回收站还原） ──
+async function handleAdminRestoreUser(request, env, corsHeaders) {
+  const admin = requireAdmin(request);
+  if (!admin) return json({ error: '未授权访问' }, 401, corsHeaders);
+
+  const { user_id, username } = await request.json();
+  if (!user_id && !username) {
+    return json({ error: '请提供 user_id 或 username' }, 400, corsHeaders);
+  }
+
+  let target;
+  if (user_id) {
+    target = await env.DB.prepare('SELECT id, username, deleted_at FROM Users WHERE id = ?').bind(parseInt(user_id)).first();
+  } else {
+    target = await env.DB.prepare('SELECT id, username, deleted_at FROM Users WHERE username = ?').bind(username).first();
+  }
+
+  if (!target) {
+    return json({ error: '用户不存在' }, 404, corsHeaders);
+  }
+  if (!target.deleted_at) {
+    return json({ error: '该用户未被删除，无需恢复' }, 400, corsHeaders);
+  }
+
+  // 检查是否已过7天
+  const deletedAt = new Date(target.deleted_at);
+  const expireAt = new Date(deletedAt.getTime() + 7 * 24 * 3600 * 1000);
+  if (expireAt <= new Date()) {
+    return json({ error: '该用户已超过7天保留期，无法恢复。如需找回请联系数据库管理员', expired: true }, 400, corsHeaders);
+  }
+
+  await env.DB.prepare('UPDATE Users SET deleted_at = NULL WHERE id = ?')
+    .bind(target.id).run();
+
+  return json({
+    ok: true,
+    message: `用户「${target.username}」已成功恢复`,
+    username: target.username
+  }, 200, corsHeaders);
+}
+
+// ── 彻底清除已删除用户（不可恢复） ──
+async function handleAdminTrashPurge(request, env, corsHeaders) {
+  const admin = requireAdmin(request);
+  if (!admin) return json({ error: '未授权访问' }, 401, corsHeaders);
+
+  const url = new URL(request.url);
+  const userId = url.searchParams.get('id'); // 指定用户ID，不传则全部清除
+
+  await ensureAllColumns(env);
+
+  if (userId) {
+    // 清除指定用户
+    const target = await env.DB.prepare('SELECT id, username FROM Users WHERE id = ? AND deleted_at IS NOT NULL')
+      .bind(parseInt(userId)).first();
+    if (!target) {
+      return json({ error: '该用户不在回收站中' }, 404, corsHeaders);
+    }
+    await env.DB.prepare('DELETE FROM Users WHERE id = ?').bind(userId).run();
+    return json({
+      ok: true,
+      message: `用户「${target.username}」已被彻底清除，数据无法恢复`,
+      purged: [target.username]
+    }, 200, corsHeaders);
+  } else {
+    // 清除所有已删除用户
+    const result = await env.DB.prepare(
+      'SELECT id, username FROM Users WHERE deleted_at IS NOT NULL'
+    ).all();
+    const toPurge = result.results || [];
+    
+    if (toPurge.length === 0) {
+      return json({ ok: true, message: '回收站为空，无需清除', purged: [], count: 0 }, 200, corsHeaders);
+    }
+
+    const names = toPurge.map(u => u.username);
+    await env.DB.prepare('DELETE FROM Users WHERE deleted_at IS NOT NULL').run();
+
+    return json({
+      ok: true,
+      message: `已彻底清除 ${toPurge.length} 个用户数据，全部不可恢复`,
+      purged: names,
+      count: toPurge.length
+    }, 200, corsHeaders);
+  }
 }
 
 // ── 清空所有用户 ──
@@ -845,6 +1035,7 @@ async function ensureAllColumns(env) {
     'ALTER TABLE Users ADD COLUMN is_frozen INTEGER DEFAULT 0',
     'ALTER TABLE Users ADD COLUMN frozen_at TEXT DEFAULT NULL',
     'ALTER TABLE Users ADD COLUMN frozen_until TEXT DEFAULT NULL',
+    'ALTER TABLE Users ADD COLUMN deleted_at TEXT DEFAULT NULL',
   ];
   for (const sql of cols) {
     try { await env.DB.prepare(sql).run(); } catch(e) {}

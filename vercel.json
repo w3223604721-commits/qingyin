@@ -18,6 +18,10 @@
       "destination": "/admin/index.html"
     },
     {
+      "source": "/PRD.md",
+      "destination": "/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
