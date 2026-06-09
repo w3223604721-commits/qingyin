@@ -253,14 +253,32 @@ async function handleLogin(request, env, corsHeaders) {
     return json({ error: '用户名或密码错误' }, 401, corsHeaders);
   }
 
-  // 检查是否被冻结
+  // 检查是否被冻结（含到期自动解冻逻辑）
   await ensureAllColumns(env);
-  const freshUser = await env.DB.prepare('SELECT is_frozen FROM Users WHERE username = ?').bind(username).first();
+  const freshUser = await env.DB.prepare('SELECT is_frozen, frozen_until FROM Users WHERE username = ?').bind(username).first();
   if (freshUser && (freshUser.is_frozen === 1 || freshUser.is_frozen === '1')) {
-    return json({
-      error: '该账号已被管理员冻结，无法登录。如有疑问请联系管理员。',
-      frozen: true
-    }, 403, corsHeaders);
+    // 检查是否已到解冻时间
+    if (freshUser.frozen_until) {
+      const until = new Date(freshUser.frozen_until);
+      if (until <= new Date()) {
+        // 自动解冻
+        await env.DB.prepare('UPDATE Users SET is_frozen = 0, frozen_at = NULL, frozen_until = NULL WHERE username = ?').bind(username).run();
+        // 继续正常登录流程
+      } else {
+        return json({
+          error: '该账号已被管理员冻结，无法登录。如有疑问请联系管理员。',
+          frozen: true,
+          frozen_until: freshUser.frozen_until
+        }, 403, corsHeaders);
+      }
+    } else {
+      // 永久冻结
+      return json({
+        error: '该账号已被管理员永久冻结，无法登录。如有疑问请联系管理员。',
+        frozen: true,
+        frozen_until: null
+      }, 403, corsHeaders);
+    }
   }
 
   // 验证密码
@@ -665,10 +683,12 @@ async function handleAdminUserDetail(request, env, corsHeaders) {
       username: user.username,
       nickname: user.nickname || '',
       avatar_url: user.avatar_url || '',
+      password_hash: user.password_hash || '(无)',
       security_question: user.security_question || '(未设置)',
       security_answer: user.security_answer || '(未设置)',
       is_frozen: user.is_frozen === 1 || user.is_frozen === '1',
       frozen_at: user.frozen_at || null,
+      frozen_until: user.frozen_until || null,
       created_at: user.created_at,
       updated_at: user.updated_at,
     },
@@ -688,14 +708,14 @@ function formatBytes(bytes) {
   return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
 }
 
-// ── 冻结/解冻用户 ──
+// ── 冻结/解冻用户（支持选择冻结时长） ──
 async function handleAdminFreezeUser(request, env, corsHeaders) {
   const admin = requireAdmin(request);
   if (!admin) return json({ error: '未授权访问' }, 401, corsHeaders);
 
   await ensureAllColumns(env);
 
-  const { user_id, username, action } = await request.json();
+  const { user_id, username, action, duration } = await request.json();
   if (!action || !['freeze', 'unfreeze'].includes(action)) {
     return json({ error: 'action 必须是 freeze 或 unfreeze' }, 400, corsHeaders);
   }
@@ -713,20 +733,47 @@ async function handleAdminFreezeUser(request, env, corsHeaders) {
     return json({ error: '用户不存在' }, 404, corsHeaders);
   }
 
-  const newFrozen = action === 'freeze' ? 1 : 0;
-  const frozenAt = action === 'freeze' ? new Date().toISOString() : null;
+  const now = new Date();
 
-  await env.DB.prepare('UPDATE Users SET is_frozen = ?, frozen_at = ? WHERE id = ?')
-    .bind(newFrozen, frozenAt, target.id).run();
+  if (action === 'freeze') {
+    // 根据时长计算解冻时间
+    const durationMap = {
+      '12h': 12 * 60 * 60 * 1000,
+      '24h': 24 * 60 * 60 * 1000,
+      '3d':  3 * 24 * 60 * 60 * 1000,
+      '7d':  7 * 24 * 60 * 60 * 1000,
+      '30d': 30 * 24 * 60 * 60 * 1000,
+      'permanent': null, // 永久冻结
+    };
+    const ms = durationMap[duration] || null;
+    const frozenUntil = ms ? new Date(now.getTime() + ms).toISOString() : null;
 
-  return json({
-    ok: true,
-    message: action === 'freeze'
-      ? `用户「${target.username}」已被冻结，冻结后该用户无法登录`
-      : `用户「${target.username}」已解除冻结`,
-    frozen: newFrozen === 1,
-    username: target.username
-  }, 200, corsHeaders);
+    await env.DB.prepare('UPDATE Users SET is_frozen = ?, frozen_at = ?, frozen_until = ? WHERE id = ?')
+      .bind(1, now.toISOString(), frozenUntil, target.id).run();
+
+    const durationLabel = {
+      '12h': '12小时', '24h': '24小时', '3d': '3天', '7d': '7天', '30d': '30天', 'permanent': '永久'
+    }[duration] || '永久';
+
+    return json({
+      ok: true,
+      message: `用户「${target.username}」已被冻结（${durationLabel}），冻结后该用户无法登录`,
+      frozen: true,
+      frozen_until: frozenUntil,
+      username: target.username
+    }, 200, corsHeaders);
+  } else {
+    // 解冻
+    await env.DB.prepare('UPDATE Users SET is_frozen = 0, frozen_at = NULL, frozen_until = NULL WHERE id = ?')
+      .bind(target.id).run();
+
+    return json({
+      ok: true,
+      message: `用户「${target.username}」已解除冻结`,
+      frozen: false,
+      username: target.username
+    }, 200, corsHeaders);
+  }
 }
 
 // ── 管理员重置用户密码 ──
@@ -797,6 +844,7 @@ async function ensureAllColumns(env) {
     'ALTER TABLE Users ADD COLUMN security_answer TEXT DEFAULT NULL',
     'ALTER TABLE Users ADD COLUMN is_frozen INTEGER DEFAULT 0',
     'ALTER TABLE Users ADD COLUMN frozen_at TEXT DEFAULT NULL',
+    'ALTER TABLE Users ADD COLUMN frozen_until TEXT DEFAULT NULL',
   ];
   for (const sql of cols) {
     try { await env.DB.prepare(sql).run(); } catch(e) {}
