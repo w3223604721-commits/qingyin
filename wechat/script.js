@@ -72,10 +72,19 @@ async function doLogin() {
       initApp();
       showToast('登录成功', 'success');
     } else {
-      showLoginError('账号或密码错误');
+      // 区分不同错误类型给出明确提示
+      var errMsg = '账号或密码错误';
+      if (data.error) {
+        if (data.error.indexOf('删除') > -1) errMsg = data.error;
+        else if (data.error.indexOf('冻结') > -1) errMsg = data.error;
+        else if (data.error.indexOf('密码') > -1 || data.error.indexOf('用户名') > -1) errMsg = data.error;
+      }
+      showLoginError(errMsg);
     }
-  } catch(e) { showLoginError('网络连接失败，请稍后重试'); }
-  finally { $('btnLoginSubmit').disabled = false; $('btnLoginSubmit').textContent = '登录'; }
+  } catch(e) {
+    console.error('[Login] error:', e);
+    showLoginError('网络连接失败（'+e.message+'），请稍后重试');
+  } finally { $('btnLoginSubmit').disabled = false; $('btnLoginSubmit').textContent = '登录'; }
 }
 
 async function doRegister() {
@@ -83,12 +92,12 @@ async function doRegister() {
   const securityQuestion = $('regSecurityQ').value;
   const securityAnswer = $('regSecurityA').value.trim();
   const password = $('regPassword').value;
-  if (!username || !password) { showLoginError('用户名和密码不能为空'); return; }
-  if (username.length < 5 || username.length > 24) { showLoginError('用户名需要5-24位'); return; }
-  if (!/^[a-zA-Z0-9_]+$/.test(username)) { showLoginError('用户名只能包含字母、数字和下划线'); return; }
-  if (!securityQuestion || !securityAnswer) { showLoginError('请选择密保问题并填写答案'); return; }
-  if (securityAnswer.length < 2) { showLoginError('密保答案至少2个字符'); return; }
-  if (password.length < 6) { showLoginError('密码至少需要6位'); return; }
+  if (!username || !password) { showRegisterError('用户名和密码不能为空'); return; }
+  if (username.length < 5 || username.length > 24) { showRegisterError('用户名需要5-24位'); return; }
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) { showRegisterError('用户名只能包含字母、数字和下划线'); return; }
+  if (!securityQuestion || !securityAnswer) { showRegisterError('请选择密保问题并填写答案'); return; }
+  if (securityAnswer.length < 2) { showRegisterError('密保答案至少2个字符'); return; }
+  if (password.length < 6) { showRegisterError('密码至少需要6位'); return; }
   hideLoginError();
   $('btnRegSubmit').disabled = true;
   $('btnRegSubmit').textContent = '注册中...';
@@ -105,10 +114,17 @@ async function doRegister() {
       initApp();
       showToast('注册成功！欢迎加入轻印', 'success');
     } else {
-      showLoginError(data.error || '注册失败');
+      showRegisterError(data.error || '注册失败：' + JSON.stringify(data));
     }
-  } catch(e) { showLoginError('网络连接失败，请稍后重试'); }
-  finally { $('btnRegSubmit').disabled = false; $('btnRegSubmit').textContent = '注册并登录'; }
+  } catch(e) {
+    console.error('[Register] error:', e);
+    showRegisterError('网络连接失败（'+e.message+'），请稍后重试');
+  } finally { $('btnRegSubmit').disabled = false; $('btnRegSubmit').textContent = '注册并登录'; }
+}
+
+function showRegisterError(msg) {
+  var el = $('registerFormError');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
 }
 
 // ── 忘记密码流程 ──
@@ -166,6 +182,8 @@ async function doResetPassword() {
     const data = await apiCall('/api/reset-password', { username, securityAnswer: answer, newPassword: newPwd });
     if (data.ok) {
       showFpSuccess(data.message || '密码重置成功，请返回登录');
+      // 清除旧token，确保用新密码重新登录
+      clearToken();
       // 2秒后自动返回登录
       setTimeout(function() {
         $('fpUsername').value = '';
@@ -218,13 +236,18 @@ function toggleFpPwd() {
 // 显示/隐藏红色错误提示（自动判断当前表单）
 function showLoginError(msg) {
   var isRegister = $('registerFormView').style.display !== 'none';
-  var errEl = isRegister ? $('registerFormError') : $('loginFormError');
+  var isForgot = $('forgotPwdView').style.display !== 'none';
+  var errEl;
+  if (isRegister) errEl = $('registerFormError');
+  else if (isForgot) errEl = $('forgotPwdError');
+  else errEl = $('loginFormError');
   if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
 }
 function hideLoginError() {
-  var e1 = $('loginFormError'), e2 = $('registerFormError');
+  var e1 = $('loginFormError'), e2 = $('registerFormError'), e3 = $('forgotPwdError');
   if (e1) e1.style.display = 'none';
   if (e2) e2.style.display = 'none';
+  if (e3) e3.style.display = 'none';
 }
 
 function switchLoginView(view) {

@@ -236,7 +236,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
     <h1>轻印 · 后台管理</h1>
     <p class="subtitle">请输入管理员密码以继续</p>
     <label>管理员密码</label>
-    <input type="password" id="adminPwd" placeholder="请输入管理员密码" autocomplete="current-password" onkeydown="if(event.key==='Enter')doAdminLogin()">
+    <div style="position:relative;">
+      <input type="password" id="adminPwd" placeholder="请输入管理员密码" autocomplete="current-password" onkeydown="if(event.key==='Enter')doAdminLogin()" style="padding-right:44px;">
+      <button onclick="toggleAdminPwd()" tabindex="-1" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:6px;display:flex;align-items:center;" aria-label="切换密码可见性">
+        <svg id="adminPwdEye" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#999" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
     <button onclick="doAdminLogin()" id="btnAdminLogin">登录后台</button>
     <p class="error-msg" id="loginError"></p>
     <div class="login-security-bar">
@@ -676,6 +681,7 @@ async function doAdminLogin() {
     var res = await fetch(WORKER_API+'/api/admin/login', {
       method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({password:pwd})
     });
+    if (!res.ok) { throw new Error('HTTP '+res.status); }
     var data = await res.json();
     if (data && data.ok) {
       adminToken = data.token;
@@ -684,19 +690,25 @@ async function doAdminLogin() {
       showToast(data.message || '登录成功', 'success');
       showApp();
     } else {
-      showLoginError(data ? (data.error || '密码错误') : 'API 连接失败');
+      showLoginError(data ? (data.error || '密码错误') : 'API 返回异常');
       shakeCard();
     }
   } catch(e) {
-    var cfg = await getOrCreateConfig();
-    if (await sha256(pwd) === cfg.pwdHash) {
-      adminToken = genSessionToken();
-      sessionStorage.setItem('qingyin_admin_session', adminToken);
-      document.getElementById('adminPwd').value = '';
-      showApp();
-      showToast('已离线登录（功能受限，建议部署 Worker API）','warning');
-    } else {
-      showLoginError('密码错误或网络异常'); shakeCard();
+    console.error('[Admin Login] API error:', e.message);
+    // 离线降级：本地密码校验
+    try {
+      var cfg = await getOrCreateConfig();
+      if (await sha256(pwd) === cfg.pwdHash) {
+        adminToken = genSessionToken();
+        sessionStorage.setItem('qingyin_admin_session', adminToken);
+        document.getElementById('adminPwd').value = '';
+        showApp();
+        showToast('已离线登录（功能受限，建议部署 Worker API）','warning');
+      } else {
+        showLoginError('密码错误或网络异常（API: '+e.message+'）'); shakeCard();
+      }
+    } catch(innerErr) {
+      showLoginError('系统异常：'+innerErr.message); shakeCard();
     }
   } finally { btn.disabled=false; btn.textContent='登录后台'; }
 }
@@ -704,15 +716,41 @@ async function doAdminLogin() {
 function showLoginError(msg) { var el=document.getElementById('loginError');el.textContent=msg;el.style.display='block'; }
 function shakeCard() { var c=document.querySelector('.login-card');c.classList.add('shake');setTimeout(function(){c.classList.remove('shake');},500); }
 
+function toggleAdminPwd() {
+  var inp = document.getElementById('adminPwd'), eye = document.getElementById('adminPwdEye');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    eye.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 012 12a10.07 10.07 0 0115.94-5.94M10 16l4-4M16 10l-4 4M19.07 4.93L4.93 19.07" stroke="#6366F1" stroke-width="1.5" stroke-linecap="round"/>';
+  } else {
+    inp.type = 'password';
+    eye.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+
 function showRecoveryLogin() { document.getElementById('recKeyInput').value='';document.getElementById('recNewPwd').value='';document.getElementById('recoveryModal').classList.add('active'); }
 
 async function doRecoveryLogin() {
   var k = document.getElementById('recKeyInput').value.trim(); var np = document.getElementById('recNewPwd').value;
   if(!k){showToast('请输入恢复密钥','error');return;} if(!np||np.length<6){showToast('新密码至少6位','error');return;}
-  var cfg=getStoredConfig();if(!cfg){showToast('系统异常','error');return;} if(k!==cfg.recoveryKey){showToast('恢复密钥不正确','error');return;}
-  var nh=await sha256(np);cfg.pwdHash=nh;cfg.recoveryKey=generateRecoveryKey(nh);cfg.changedAt=Date.now();saveConfig(cfg);
-  closeModal('recoveryModal');adminToken=genSessionToken();sessionStorage.setItem('qingyin_admin_session',adminToken);
-  showToast('密码已重置，请重新登录','success');doAdminLogout();
+  try {
+    var cfg=getStoredConfig();
+    if(!cfg){
+      // 首次使用，尝试用默认密码生成配置
+      cfg = await getOrCreateConfig();
+    }
+    if(!cfg){showToast('系统异常：无法初始化配置','error');return;}
+    if(k!==cfg.recoveryKey){showToast('恢复密钥不正确','error');return;}
+    var nh=await sha256(np);cfg.pwdHash=nh;cfg.recoveryKey=generateRecoveryKey(nh);cfg.changedAt=Date.now();saveConfig(cfg);
+    closeModal('recoveryModal');
+    // 重置成功后自动用新密码登录
+    document.getElementById('adminPwd').value = np;
+    showToast('密码已重置！正在自动登录...','success');
+    await sleep(500);
+    doAdminLogin();
+  } catch(e) {
+    console.error('[Recovery Login] error:', e);
+    showToast('重置失败：'+e.message,'error');
+  }
 }
 
 function showApp() {

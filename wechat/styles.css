@@ -1403,7 +1403,15 @@ body {
 
 /* 忘记密码提示文字 */
 .forgot-tip {
-  font-size:13px; color:#888; text-align:center; margin:0; padding:0 4px; line-height:1.5;
+  font-size:13px; color:#888; text-align:center; margin:0; padding:8px 4px; line-height:1.5;
+}
+
+/* 忘记密码第二步内部间距 */
+#fpStep2 {
+  display:flex; flex-direction:column; gap:16px;
+}
+#fpStep2 .forgot-tip {
+  margin-bottom:4px;
 }
 
 .login-footer-hint {
