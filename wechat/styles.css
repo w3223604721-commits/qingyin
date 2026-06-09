@@ -1290,7 +1290,14 @@ body {
   font-size:14px; color:#AAA; letter-spacing:2px; margin-top:10px;
 }
 .login-form {
-  display:flex; flex-direction:column; gap:24px;
+  display:flex; flex-direction:column; gap:20px;
+}
+/* 注册表单额外间距 */
+#registerFormView { gap:22px; }
+#registerFormView input[type="text"],
+#registerFormView input[type="tel"],
+#registerFormView .pwd-wrap {
+  margin-bottom:4px;
 }
 .login-form input[type="text"],
 .login-form input[type="password"],
