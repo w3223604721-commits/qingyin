@@ -1,25 +1,25 @@
-# 轻印 (Qingyin) - 旅行记忆
+# 轻印 (QingYin) - 旅行记忆
 
 [![Powered by CloudBase](https://7463-tcb-advanced-a656fc-1257967285.tcb.qcloud.la/mcp/powered-by-cloudbase-badge.svg)](https://github.com/TencentCloudBase/CloudBase-AI-ToolKit)
 
-> 基于 **CloudBase AI ToolKit** 开发的全栈旅行记忆应用，支持微信小程序 + 浏览器 Web 双端。
+> 轻量级旅行日记与足迹记录应用，支持微信小程序 + 浏览器 Web 双端。
 >
-> **当前版本：内测 2.0 (Beta 2.0) — 2026-06-08**
+> **当前版本：内测 2.1 (Beta 2.1) — 2026-06-09**
 
 ## 🚀 部署信息
 
-### 浏览器 Web 版
-- **访问地址**: [https://ai-native-d5gv1bzqle900971e-1439954016.tcloudbaseapp.com/?v=20260608](https://ai-native-d5gv1bzqle900971e-1439954016.tcloudbaseapp.com/?v=20260608)
-- **部署方式**: CloudBase 静态托管
-- **技术栈**: 纯 HTML/CSS/JS 单页应用 + Leaflet 地图 + LocalStorage
-- **最新更新**: 2026-06-08 (内测 2.0 - 新增登录系统、用户协议、足迹报告、勋章弹窗、全屏地图、全局更名轻印)
+### 浏览器 Web 版（生产环境）
+| 平台 | 地址 | 技术栈 |
+|------|------|--------|
+| **Vercel** (主) | [https://20260603112143.vercel.app](https://20260603112143.vercel.app) | 纯 HTML/CSS/JS SPA + Cloudflare Workers 后端 |
+| **CloudBase** (镜像) | [https://ai-native-d5gv1bzqle900971e-1439954016.tcloudbaseapp.com/](https://ai-native-d5gv1bzqle900971e-1439954016.tcloudbaseapp.com/) | 纯 HTML/CSS/JS SPA + Leaflet 地图 |
 
 ### 微信小程序版
-- **AppID**: `wxf4a03848abf825e6`
-- **环境 ID**: `ai-native-d5gv1bzqle900971e`
-- **部署方式**: 微信开发者工具上传
-- **技术栈**: 原生小程序（WXML/WXSS/JS）+ `wx.cloud`
-- **最新更新**: 2026-06-08 (内测 2.0 - 新增登录系统、用户协议、足迹报告、勋章弹窗、全屏地图、全局更名轻印)
+| 项目 | 值 |
+|------|-----|
+| AppID | `wxf4a03848abf825e6` |
+| 环境 ID | `ai-native-d5gv1bzqle900971e` |
+| 最新更新 | 2026-06-08 |
 
 ### CloudBase 环境
 | 项目 | 值 |
@@ -28,56 +28,39 @@
 | 区域 | `ap-shanghai` |
 | 静态托管域名 | `ai-native-d5gv1bzqle900971e-1439954016.tcloudbaseapp.com` |
 
-### 云函数
-| 函数名 | 用途 | 运行时 |
-|--------|------|--------|
-| `maporyAuth` | 用户登录/数据同步/手机绑定 | Nodejs18.15 |
+### Cloudflare Workers 后端
+| 项目 | 值 |
+|------|-----|
+| Worker 地址 | `https://qingyin-api.w3223604721.workers.dev` |
+| API 文档 | 见 [CLOUDFLARE_DEPLOY.md](./CLOUDFLARE_DEPLOY.md) |
 
-### 数据库集合
-| 集合名 | 用途 | 权限 |
-|--------|------|------|
-| `users` | 用户信息 | PRIVATE |
-| `journeys` | 旅行日志 | PRIVATE |
-| `journey_days` | 日志日记录 | PRIVATE |
-| `checkins` | 打卡记录 | PRIVATE |
-| `footprint_tracks` | 足迹轨迹 | PRIVATE |
-| `medals` | 成就勋章定义 | READONLY |
-| `user_medals` | 用户勋章 | PRIVATE |
-| `share_exports` | 分享导出 | PRIVATE |
-
-## 🏗️ 项目架构
+## 📦 项目架构
 
 ```
-├── miniprogram/           # 微信小程序
-│   ├── app.js / .json / .wxss
-│   ├── pages/
-│   │   ├── index/         # 日志 Tab
-│   │   ├── checkin/       # 打卡 Tab
-│   │   ├── share/         # 分享 Tab
-│   │   ├── profile/       # 我的 Tab
-│   │   ├── journey-detail/# 行程详情
-│   │   ├── diary-edit/    # 日记编辑
-│   │   ├── medals/        # 成就勋章
-│   │   ├── insights/      # 旅行洞察
-│   │   └── settings/      # 设置
-│   └── components/
-│       └── custom-tab-bar/ # 自定义 TabBar
-├── src/                   # Web 版（Vue 3）
-│   ├── App.vue
-│   ├── main.ts            # 路由配置
-│   ├── style.css          # 全局样式
-│   ├── utils/
-│   │   └── cloudbase.ts   # CloudBase SDK 初始化
-│   └── pages/
-│       ├── JournalPage.vue
-│       ├── CheckinPage.vue
-│       ├── SharePage.vue
-│       ├── ProfilePage.vue
-│       └── JourneyDetailPage.vue
-├── cloudfunctions/        # 云函数
-├── dist/                  # Web 构建产物
-└── cloudbaserc.json       # CloudBase 配置
+qingyin/
+├── wechat/                   # 🚀 主产品 — 纯 HTML/CSS/JS SPA
+│   ├── index.html            # 单页应用入口（含登录覆盖层）
+│   ├── script.js             # 核心交互逻辑（含 Cloudflare Workers 登录）
+│   ├── styles.css            # 全局样式
+│   ├── china_provinces.json  # 中国省份地理数据
+│   ├── project.config.json   # 微信小程序项目配置
+│   └── PRD.md                # 产品需求文档
+├── miniprogram/              # 微信小程序版
+├── worker/                   # Cloudflare Workers 后端
+│   ├── index.js              # API 接口（注册/登录/鉴权）
+│   ├── schema.sql            # D1 数据库初始化
+│   └── wrangler.toml         # Wrangler 配置
+├── cloudfunctions/           # CloudBase 云函数（遗留）
+├── src/                      # Vue 3 SPA（遗留，已停用）
+├── vercel.json               # Vercel 部署配置（静态文件）
+└── README.md
 ```
+
+## ⚠️ 重要提示
+
+- **主部署平台为 Vercel**，CloudBase 为镜像部署
+- **所有修改必须同步到两个平台**：Vercel（推送 GitHub） + CloudBase（`uploadFiles`）
+- **修改后更新 PRD**：`wechat/PRD.md` 记录版本变更
 
 ## 🎨 设计系统
 
@@ -88,27 +71,22 @@
 - **圆角**: 20px (卡片), 24px (弹窗)
 - **移动优先**: 最大内容宽度 500px
 
-## 🚀 本地开发
+## 🚀 部署流程
 
-### Web 版
-```bash
-npm install
-npm run dev      # 开发服务器
-npm run build    # 构建
-```
+### Vercel（自动）
+1. 推送 `master` 分支到 GitHub → Vercel 自动部署
 
-### 小程序版
-1. 用微信开发者工具打开项目根目录
-2. 在 `miniprogram/app.js` 中确认环境 ID
-3. 预览/上传
+### CloudBase（手动）
+使用 CloudBase MCP 工具上传 `wechat/` 目录到静态托管。
 
-## 📦 部署
+### Cloudflare Workers
+见 [CLOUDFLARE_DEPLOY.md](./CLOUDFLARE_DEPLOY.md)
 
-### Web 版
-```bash
-npm run build
-# 使用 CloudBase MCP 工具上传 dist 目录到静态托管
-```
+## 📄 API 接口
 
-### 小程序版
-通过微信开发者工具上传代码并提交审核。
+| 方法 | 路径 | 功能 |
+|------|------|------|
+| POST | `/api/register` | 用户注册 |
+| POST | `/api/login` | 用户登录 |
+| GET | `/api/me` | 获取当前用户 |
+| GET | `/api/explore` | 数据探索（调试） |

@@ -27,11 +27,13 @@
 
 ### 1.4 技术栈
 
-- 前端：原生 HTML/CSS/JavaScript（单页应用 SPA）
+- 前端：原生 HTML/CSS/JavaScript（单页应用 SPA）— `wechat/index.html` 为唯一入口
+- 后端认证：Cloudflare Workers + D1 SQL Database
 - 地图：Leaflet + 天地图瓦片
-- 数据存储：浏览器 LocalStorage（本地存储）
+- 数据存储：浏览器 LocalStorage（本地存储）+ Cloudflare D1（用户账号）
 - 图片导出：html2canvas
 - 运行环境：微信小程序 / 移动端 H5
+- 部署：Vercel（主）+ CloudBase 静态托管（镜像）
 
 ---
 
@@ -337,7 +339,7 @@
 
 ### 内测 2.1（当前版本 · 2026-06-09）
 
-> ⚠️ **内测 2.1 说明**：登录系统从 CloudBase 迁移至自建 Cloudflare Workers 后端，实现真正的账号密码注册/登录功能，不再依赖第三方登录 SDK。
+> ⚠️ **内测 2.1 说明**：登录系统从 CloudBase 迁移至自建 Cloudflare Workers 后端，实现真正的账号密码注册/登录功能，不再依赖第三方登录 SDK。同时确认 `wechat/` 纯 HTML/CSS/JS 版本为主产品，废弃 Vue SPA 迁移。
 
 #### 🆕 新增功能
 
@@ -346,56 +348,42 @@
 - [x] **用户注册**：支持用户名 + 手机号（可选）+ 密码注册，密码 SHA-256 哈希存储
 - [x] **用户登录**：账号密码登录，返回 JWT-like token（7天有效期）
 - [x] **Token 鉴权**：`/api/me` 接口验证 token 并返回用户信息
-- [x] **调试接口**：`/api/explore` 查看数据库用户列表
+- [x] **登录页面集成到主产品**：`wechat/index.html` 内置登录/注册覆盖层，进入即检查 token
+- [x] **协议页面内置**：用户协议和隐私声明内嵌在应用中，无需跳转
 
 #### 🎨 UI 改版
 
-- [x] **登录页面重设计**：仿航旅纵横风格，白色背景 + 绿色品牌色（#5CB85C）
-- [x] **表单布局**：纵向单列居中，Logo → 输入框 → 按钮 → 操作链接 → 社交图标
+- [x] **登录页面**：Indigo 品牌色（#6366F1），Logo + 表单 + 协议勾选，无缝切换登录/注册
 - [x] **密码显示切换**：眼睛图标切换明文/密文显示
-- [x] **登录/注册视图切换**：「创建账号」链接无缝切换到注册表单
-- [x] **协议勾选**：绿色复选框 + 用户协议和隐私声明链接
-- [x] **第三方登录入口**：身份认证、支付宝、微信、微博、QQ、Apple 图标预留
+- [x] **注册表单验证**：用户名5-24位仅字母数字下划线，密码至少6位
 
-#### 🔧 技术架构变更
+#### 🔧 部署架构变更
 
 | 项目 | 变更前 | 变更后 |
 |------|--------|--------|
-| 认证方式 | CloudBase 匿名登录 / 第三方 OAuth | 自建 JWT Token 鉴权 |
-| 用户数据 | CloudBase NoSQL 集合 | Cloudflare D1 SQL (SQLite) |
-| API 后端 | 无独立后端 | Cloudflare Workers (`qingyin-api`) |
-| 前端框架 | 原生 HTML/CSS/JS | Vue 3 + Vite |
-| 部署平台 | CloudBase 静态托管 | **Vercel**（前端）+ Cloudflare Workers（后端） |
+| 主产品 | Vue 3 SPA (src/) | 纯 HTML/CSS/JS SPA (wechat/) |
+| 登录方式 | CloudBase 匿名登录 | Cloudflare Workers JWT Token |
+| Vercel 部署 | `npm run build` (Vue) | 静态文件直出 |
+| .gitignore | wechat/ 被忽略 | wechat/ 已纳入版本管理 |
 
-#### 🔗 API 接口清单
+#### 🔗 部署信息（更新）
 
-| 接口 | 方法 | 功能 | 状态 |
-|------|------|------|------|
-| `/api/register` | POST | 注册（username, phone?, password） | ✅ 可用 |
-| `/api/login` | POST | 登录（username, password），返回 token + user | ✅ 可用 |
-| `/api/me` | GET | 鉴权获取当前用户信息（Header: Bearer token） | ✅ 可用 |
-| `/api/explore` | GET | 调试用：查看用户列表 | ✅ 可用 |
-
-#### 🔗 部署信息
-
+- [x] **Vercel 前端部署**：`https://20260603112143.vercel.app`（自动部署，已切换为静态文件）
+- [x] **CloudBase 镜像部署**：`https://ai-native-d5gv1bzqle900971e-1439954016.tcloudbaseapp.com/`
 - [x] **Worker 后端地址**：`https://qingyin-api.w3223604721.workers.dev`
 - [x] **D1 数据库**：`qingyin-db`（Asia Pacific 区域，Users 表已创建并索引）
-- [x] **Vercel 前端部署**：`https://20260603112143.vercel.app`
-- [ ] **自定义域名绑定**：`qingyinapp.cn`（DNS 已配置 A/CNAME，⏳ 等 ICP 备案通过后生效）
-- [x] **API 代理配置**：`vercel.json` 中 `/api/*` 代理到 Worker（备用直连方式）
 
-#### 📁 新增/修改文件
+#### 📁 修改文件（2026-06-09）
 
 | 文件路径 | 变更类型 | 说明 |
 |----------|----------|------|
-| `src/pages/LoginPage.vue` | 重写 | 航旅纵横风格登录/注册页，对接 Worker API |
-| `worker/index.js` | 新增 | Workers 后端代码（225行，含注册/登录/鉴权/探索） |
-| `worker/schema.sql` | 新增 | D1 Users 表初始化脚本 |
-| `worker/wrangler.toml` | 新增 | Wrangler CLI 配置 |
-| `vercel.json` | 修改 | 添加 `/api/*` 代理规则 |
-| `.env.production` | 新增 | 生产环境 VITE_API_URL 变量 |
-| `src/main.ts` | 修改 | 路由守卫增加本地 token 检查优先级 |
-| `CLOUDFLARE_DEPLOY.md` | 新增 | Cloudflare 部署完整操作指南 |
+| `wechat/index.html` | 修改 | 添加登录/注册覆盖层 + 协议页面 HTML |
+| `wechat/script.js` | 修改 | 添加 Cloudflare Workers 登录 API 调用逻辑 |
+| `wechat/styles.css` | 修改 | 添加登录页面样式（Indigo 品牌色） |
+| `wechat/.git` | 删除 | 移除内嵌 git 仓库（已纳入主项目版本管理） |
+| `.gitignore` | 修改 | 移除 `wechat/` 排除项 |
+| `vercel.json` | 重写 | 从 Vue build 改为 `wechat/` 静态文件直出 |
+| `README.md` | 重写 | 更新部署架构说明，标注 Vercel 为主平台 |
 
 ---
 
