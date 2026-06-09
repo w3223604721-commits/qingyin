@@ -1265,9 +1265,10 @@ body {
    登录/注册覆盖层
    ============================================ */
 .login-overlay {
-  position:fixed; inset:0; background:#FFFFFF;
-  z-index:1000; display:flex; align-items:center; justify-content:center;
-  padding:24px; overflow-y:auto;
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  background:#FFFFFF;
+  z-index:9999; display:flex; align-items:center; justify-content:center;
+  padding:24px;
 }
 .login-container {
   width:100%; max-width:380px;
