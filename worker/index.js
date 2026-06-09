@@ -24,6 +24,9 @@ export default {
     }
 
     try {
+      // ── 自动初始化 D1 表结构（幂等操作，首次部署自动建表） ──
+      await ensureSchema(env);
+
       // ── 全局限流（IP 频率限制） ──
       const clientIP = getClientIP(request);
       if (!checkRateLimit(clientIP)) {
@@ -160,6 +163,42 @@ async function hashPassword(password) {
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ── 自动初始化 D1 表结构（幂等操作） ──
+async function ensureSchema(env) {
+  try {
+    await env.DB.prepare(`
+      CREATE TABLE IF NOT EXISTS Users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        phone TEXT,
+        password_hash TEXT NOT NULL,
+        nickname TEXT DEFAULT '',
+        avatar_url TEXT DEFAULT '',
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      )
+    `).run();
+
+    await env.DB.prepare('CREATE INDEX IF NOT EXISTS idx_users_username ON Users(username)').run();
+    await env.DB.prepare('CREATE INDEX IF NOT EXISTS idx_users_phone ON Users(phone)').run();
+
+    // 确保所有必要列存在（兼容旧表结构）
+    const cols = [
+      'ALTER TABLE Users ADD COLUMN security_question TEXT DEFAULT NULL',
+      'ALTER TABLE Users ADD COLUMN security_answer TEXT DEFAULT NULL',
+      'ALTER TABLE Users ADD COLUMN is_frozen INTEGER DEFAULT 0',
+      'ALTER TABLE Users ADD COLUMN frozen_at TEXT DEFAULT NULL',
+      'ALTER TABLE Users ADD COLUMN frozen_until TEXT DEFAULT NULL',
+      'ALTER TABLE Users ADD COLUMN deleted_at TEXT DEFAULT NULL',
+    ];
+    for (const sql of cols) {
+      try { await env.DB.prepare(sql).run(); } catch(e) { /* 列已存在则忽略 */ }
+    }
+  } catch(e) {
+    console.error('[ensureSchema] Error:', e.message);
+  }
 }
 
 // ──────────────────────────────────────────────

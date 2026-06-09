@@ -1,25 +1,28 @@
 // ============================================
-// 轻印 - 旅行记忆 交互脚本 v2.1
+// 轻印 - 旅行记忆 交互脚本 v2.3
 // ============================================
 
 // ---- 登录系统 (Cloudflare Workers) ----
 const API_BASE = 'https://qingyin-api.w3223604721.workers.dev';
+const API_TIMEOUT = 15000; // 15秒超时
 
 function getToken() { return localStorage.getItem('qingyin_token'); }
 function setToken(t) { localStorage.setItem('qingyin_token', t); }
 function clearToken() { localStorage.removeItem('qingyin_token'); localStorage.removeItem('qingyin_user'); }
 
 function getStoredUser() {
-  try { const u = localStorage.getItem('qingyin_user'); return u ? JSON.parse(u) : null; }
+  try { var u = localStorage.getItem('qingyin_user'); return u ? JSON.parse(u) : null; }
   catch(e) { return null; }
 }
 
 // 检查登录状态
 function checkLogin() {
-  const token = getToken();
+  var token = getToken();
   if (!token) return false;
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    var parts = token.split('.');
+    if (parts.length !== 3) { clearToken(); return false; }
+    var payload = JSON.parse(atob(parts[1]));
     if (payload.exp && payload.exp < Date.now()) { clearToken(); return false; }
     return true;
   } catch(e) { clearToken(); return false; }
@@ -28,257 +31,244 @@ function checkLogin() {
 function showLogin() {
   $('loginOverlay').style.display = 'flex';
   $('appContent').style.display = 'none';
-  document.querySelector('.bottom-nav').style.display = 'none';
+  var bottomNav = document.querySelector('.bottom-nav');
+  if (bottomNav) bottomNav.style.display = 'none';
   $('fabBtn').style.display = 'none';
-  // 默认显示登录表单
   switchLoginView('login');
 }
 
 function hideLogin() {
   $('loginOverlay').style.display = 'none';
   $('appContent').style.display = 'block';
-  document.querySelector('.bottom-nav').style.display = 'flex';
+  var bottomNav = document.querySelector('.bottom-nav');
+  if (bottomNav) bottomNav.style.display = 'flex';
   $('fabBtn').style.display = 'flex';
 }
 
+// 带超时的 API 调用
 async function apiCall(path, body) {
-  const res = await fetch(API_BASE + path, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  return res.json();
+  var controller = new AbortController();
+  var timeout = setTimeout(function() { controller.abort(); }, API_TIMEOUT);
+  try {
+    var res = await fetch(API_BASE + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    if (!res.ok) {
+      var errorText = '';
+      try { var errData = await res.json(); errorText = errData.error || ''; } catch(e) {}
+      if (errorText) console.warn('[API] HTTP '+res.status+':', errorText);
+      else console.warn('[API] HTTP '+res.status+' (no JSON body)');
+    }
+    return res.json();
+  } catch(e) {
+    clearTimeout(timeout);
+    if (e.name === 'AbortError') throw new Error('请求超时（'+API_TIMEOUT/1000+'秒），请检查网络');
+    throw e;
+  }
 }
 
+// ── 登录 ──
 async function doLogin() {
-  const username = $('loginUsername').value.trim();
-  const password = $('loginPassword').value;
-  if (!username || !password) { showLoginError('请输入用户名和密码'); return; }
-  if (!$('loginAgreed').checked) { showLoginError('请先阅读并同意用户协议和隐私声明'); return; }
-  hideLoginError();
+  var username = $('loginUsername').value.trim();
+  var password = $('loginPassword').value;
+  if (!username || !password) { showLoginError('请输入用户名和密码'); shakeLoginCard(); return; }
+  if (!$('loginAgreed').checked) { showLoginError('请先阅读并同意用户协议和隐私声明'); shakeLoginCard(); return; }
+  hideAllErrors();
   var btn = $('btnLoginSubmit');
-  btn.disabled = true;
-  btn.textContent = '登录中...';
+  btn.disabled = true; btn.textContent = '登录中...';
+
   try {
-    console.log('[Login] Sending request for user:', username);
-    const data = await apiCall('/api/login', { username, password });
-    console.log('[Login] Response:', JSON.stringify(data));
+    console.log('[登录] 发送请求 username='+username);
+    var data = await apiCall('/api/login', { username: username, password: password });
+    console.log('[登录] 返回:', JSON.stringify(data));
+
     if (data && data.ok) {
       setToken(data.token);
       localStorage.setItem('qingyin_user', JSON.stringify(data.user));
-      // 同步昵称到本地
       if (data.user && data.user.nickname) {
         appData.profile.name = data.user.nickname;
         saveData(appData);
       }
       hideLogin();
-      // 确保主内容可见
-      var appContent = $('appContent');
-      if (appContent) { appContent.style.display = 'block'; }
+      $('appContent').style.display = 'block';
+      document.querySelector('.bottom-nav').style.display = 'flex';
+      $('fabBtn').style.display = 'flex';
       initApp();
       showToast('登录成功', 'success');
     } else {
-      // 区分不同错误类型给出明确提示
-      var errMsg = '账号或密码错误';
-      if (data && data.error) {
-        if (data.error.indexOf('删除') > -1 || data.error.indexOf('冻结') > -1) errMsg = data.error;
-        else if (data.error.indexOf('密码') > -1 || data.error.indexOf('用户名') > -1) errMsg = data.error;
-        else if (data.error.indexOf('不存在') > -1) errMsg = data.error;
-      }
-      console.error('[Login] Error:', errMsg);
+      var errMsg = data && data.error ? data.error : '账号或密码错误';
+      console.error('[登录] 失败:', errMsg);
       showLoginError(errMsg);
-      shakeLoginCard && shakeLoginCard();
+      shakeLoginCard();
     }
   } catch(e) {
-    console.error('[Login] Exception:', e.message);
+    console.error('[登录] 异常:', e.message);
     showLoginError('网络连接失败（'+e.message+'），请稍后重试');
+    shakeLoginCard();
   } finally {
-    btn.disabled = false;
-    btn.textContent = '登录';
+    btn.disabled = false; btn.textContent = '登录';
   }
 }
 
-// 登录/注册卡片抖动动画（用于错误提示）
-function shakeLoginCard() {
-  var card = document.querySelector('.login-container') || document.querySelector('.login-overlay');
-  if (!card) return;
-  card.style.animation = 'none';
-  card.offsetHeight; // 触发 reflow
-  card.style.animation = 'loginShake 0.5s ease';
-}
-// 注册 CSS 中添加 @keyframes loginShake
-
+// ── 注册 ──
 async function doRegister() {
-  const username = $('regUsername').value.trim();
-  const securityQuestion = $('regSecurityQ').value;
-  const securityAnswer = $('regSecurityA').value.trim();
-  const password = $('regPassword').value;
-  if (!username || !password) { showRegisterError('用户名和密码不能为空'); return; }
-  if (username.length < 5 || username.length > 24) { showRegisterError('用户名需要5-24位'); return; }
-  if (!/^[a-zA-Z0-9_]+$/.test(username)) { showRegisterError('用户名只能包含字母、数字和下划线'); return; }
-  if (!securityQuestion || !securityAnswer) { showRegisterError('请选择密保问题并填写答案'); return; }
-  if (securityAnswer.length < 2) { showRegisterError('密保答案至少2个字符'); return; }
-  if (password.length < 6) { showRegisterError('密码至少需要6位'); return; }
-  hideLoginError();
+  var username = $('regUsername').value.trim();
+  var securityQuestion = $('regSecurityQ').value;
+  var securityAnswer = $('regSecurityA').value.trim();
+  var password = $('regPassword').value;
+
+  if (!username || !password) { showRegisterError('用户名和密码不能为空'); shakeLoginCard(); return; }
+  if (username.length < 5 || username.length > 24) { showRegisterError('用户名需要5-24位'); shakeLoginCard(); return; }
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) { showRegisterError('用户名只能包含字母、数字和下划线'); shakeLoginCard(); return; }
+  if (!securityQuestion) { showRegisterError('请选择密保问题'); shakeLoginCard(); return; }
+  if (!securityAnswer || securityAnswer.length < 2) { showRegisterError('密保答案至少2个字符'); shakeLoginCard(); return; }
+  if (password.length < 6) { showRegisterError('密码至少需要6位'); shakeLoginCard(); return; }
+
+  hideAllErrors();
   var btn = $('btnRegSubmit');
-  btn.disabled = true;
-  btn.textContent = '注册中...';
+  btn.disabled = true; btn.textContent = '注册中...';
+
   try {
-    console.log('[Register] Sending request for user:', username);
-    const data = await apiCall('/api/register', { username, password, securityQuestion, securityAnswer });
-    console.log('[Register] Response:', JSON.stringify(data));
+    console.log('[注册] 发送请求 username='+username);
+    var data = await apiCall('/api/register', {
+      username: username,
+      password: password,
+      securityQuestion: securityQuestion,
+      securityAnswer: securityAnswer
+    });
+    console.log('[注册] 返回:', JSON.stringify(data));
+
     if (data && data.ok) {
-      // 注册成功
+      // 注册成功，自动登录
       setToken(data.token);
       localStorage.setItem('qingyin_user', JSON.stringify(data.user));
       if (data.user && data.user.nickname) {
         appData.profile.name = data.user.nickname;
         saveData(appData);
       }
-      // 先隐藏登录覆盖层，再初始化应用
       hideLogin();
-      // 确保 appContent 可见
-      var appContent = $('appContent');
-      if (appContent) { appContent.style.display = 'block'; }
-      var bottomNav = document.querySelector('.bottom-nav');
-      if (bottomNav) { bottomNav.style.display = 'flex'; }
-      var fabBtn = $('fabBtn');
-      if (fabBtn) { fabBtn.style.display = 'flex'; }
-      // 初始化应用
+      $('appContent').style.display = 'block';
+      document.querySelector('.bottom-nav').style.display = 'flex';
+      $('fabBtn').style.display = 'flex';
       initApp();
       showToast('注册成功！欢迎加入轻印', 'success');
     } else {
-      // 注册失败
-      var errorMsg = '注册失败';
-      if (data && data.error) {
-        errorMsg = data.error;
-      } else if (data) {
-        errorMsg = '服务器返回异常：' + JSON.stringify(data).substring(0, 100);
-      }
-      console.error('[Register] Server error:', errorMsg);
-      showRegisterError(errorMsg);
-      shakeLoginCard && shakeLoginCard();
+      var errMsg = data && data.error ? data.error : '注册失败';
+      console.error('[注册] 失败:', errMsg);
+      showRegisterError(errMsg);
+      shakeLoginCard();
     }
   } catch(e) {
-    console.error('[Register] Exception:', e.message, e.stack);
+    console.error('[注册] 异常:', e.message);
     showRegisterError('网络连接失败（'+e.message+'），请检查网络后重试');
+    shakeLoginCard();
   } finally {
-    btn.disabled = false;
-    btn.textContent = '注册并登录';
+    btn.disabled = false; btn.textContent = '注册并登录';
   }
 }
 
-function showRegisterError(msg) {
-  console.log('[showRegisterError]', msg);
-  var el = $('registerFormError');
-  if (!el) { console.warn('[showRegisterError] #registerFormError not found!'); return; }
-  el.textContent = msg;
-  el.style.display = 'block';
-  el.style.background = '#FFF0F0';
-  el.style.color = '#E74C3C';
-  // 确保错误信息在视口内
-  setTimeout(function() {
-    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, 50);
-}
-
-// ── 忘记密码流程 ──
-function showForgotPassword() {
-  switchLoginView('forgot');
-  // 重置忘记密码表单
-  $('fpUsername').value = '';
-  $('fpUsername').disabled = false;
-  $('fpAnswer').value = '';
-  $('fpNewPwd').value = '';
-  $('fpStep2').style.display = 'none';
-  $('forgotPwdError').style.display = 'none';
-  $('btnFpQuery').disabled = false;
-  $('btnFpQuery').textContent = '查询账号是否存在';
-}
-
+// ── 忘记密码 ──
 async function doQuerySecurity() {
-  const username = $('fpUsername').value.trim();
-  if (!username) {
-    showFpError('请输入用户名');
-    return;
-  }
+  var username = $('fpUsername').value.trim();
+  if (!username) { showFpError('请输入用户名'); return; }
   hideFpMsg();
-  $('btnFpQuery').disabled = true;
-  $('btnFpQuery').textContent = '查询中...';
+
+  var btn = $('btnFpQuery');
+  btn.disabled = true; btn.textContent = '查询中...';
+
   try {
-    const data = await apiCall('/api/forgot-password', { username });
-    if (data.ok) {
-      // 账号存在，显示密保问题
+    console.log('[忘记密码] 查询账号 username='+username);
+    var data = await apiCall('/api/forgot-password', { username: username });
+    console.log('[忘记密码] 返回:', JSON.stringify(data));
+
+    if (data && data.ok) {
       $('fpQuestionText').innerHTML = '您的密保问题：<strong>' + data.securityQuestion + '</strong>';
-      $('fpStep2').style.display = 'block';
+      $('fpStep2').style.display = 'flex';
       $('btnFpQuery').textContent = '已确认账号';
       $('btnFpQuery').disabled = true;
       $('fpUsername').disabled = true;
       $('forgotPwdError').style.display = 'none';
-      // 自动聚焦密保答案输入框
       setTimeout(function() { $('fpAnswer').focus(); }, 200);
-    } else if (data.error === '账号不存在') {
-      showFpError('账号不存在');
     } else {
-      showFpError(data.error || '查询失败');
+      var errMsg = data && data.error ? data.error : '查询失败';
+      showFpError(errMsg);
+      btn.disabled = false; btn.textContent = '查询账号';
     }
-  } catch(e) { showFpError('网络连接失败，请稍后重试'); }
-  finally { if (!$('btnFpQuery').disabled || $('fpUsername').disabled) { /* query button stays disabled */ } else { $('btnFpQuery').disabled = false;     $('btnFpQuery').textContent = '查询账号是否存在'; } }
+  } catch(e) {
+    console.error('[忘记密码] 异常:', e.message);
+    showFpError('网络连接失败（'+e.message+'），请稍后重试');
+    btn.disabled = false; btn.textContent = '查询账号';
+  }
 }
 
 async function doResetPassword() {
-  const username = $('fpUsername').value.trim();
-  const answer = $('fpAnswer').value.trim();
-  const newPwd = $('fpNewPwd').value;
+  var username = $('fpUsername').value.trim();
+  var answer = $('fpAnswer').value.trim();
+  var newPwd = $('fpNewPwd').value;
+
   if (!answer) { showFpError('请输入密保答案'); return; }
   if (!newPwd || newPwd.length < 6) { showFpError('新密码至少需要6位'); return; }
   hideFpMsg();
+
+  var btn = $('btnFpReset');
+  btn.disabled = true; btn.textContent = '重置中...';
+
   try {
-    const data = await apiCall('/api/reset-password', { username, securityAnswer: answer, newPassword: newPwd });
-    if (data.ok) {
+    console.log('[重置密码] 发送请求 username='+username);
+    var data = await apiCall('/api/reset-password', {
+      username: username,
+      securityAnswer: answer,
+      newPassword: newPwd
+    });
+    console.log('[重置密码] 返回:', JSON.stringify(data));
+
+    if (data && data.ok) {
       showFpSuccess(data.message || '密码重置成功，请返回登录');
-      // 清除旧token，确保用新密码重新登录
       clearToken();
-      // 2秒后自动返回登录
       setTimeout(function() {
-        $('fpUsername').value = '';
-        $('fpUsername').disabled = false;
-        $('fpStep2').style.display = 'none';
-        $('fpAnswer').value = '';
-        $('fpNewPwd').value = '';
-        $('btnFpQuery').disabled = false;
-        $('btnFpQuery').textContent = '查询账号是否存在';
-        hideFpMsg();
+        resetForgotForm();
         switchLoginView('login');
       }, 2000);
-    } else if (data.error === '密保答案错误') {
-      showFpError('密保答案错误，请重新输入');
-      $('fpAnswer').value = '';
-      $('fpAnswer').focus();
     } else {
-      showFpError(data.error || '重置失败，请稍后重试');
+      var errMsg = data && data.error ? data.error : '重置失败';
+      showFpError(errMsg);
+      if (data && data.error === '密保答案错误') {
+        $('fpAnswer').value = '';
+        $('fpAnswer').focus();
+      }
     }
-  } catch(e) { showFpError('网络连接失败，请稍后重试'); }
+  } catch(e) {
+    console.error('[重置密码] 异常:', e.message);
+    showFpError('网络连接失败（'+e.message+'），请稍后重试');
+  } finally {
+    btn.disabled = false; btn.textContent = '确认重置密码';
+  }
 }
 
-function showFpError(msg) {
-  var el = $('forgotPwdError');
-  el.textContent = msg;
-  el.style.display = 'block';
-  el.style.background = '#FFF0F0';
-  el.style.color = '#E74C3C';
+function resetForgotForm() {
+  $('fpUsername').value = '';
+  $('fpUsername').disabled = false;
+  $('fpStep2').style.display = 'none';
+  $('fpAnswer').value = '';
+  $('fpNewPwd').value = '';
+  $('btnFpQuery').disabled = false;
+  $('btnFpQuery').textContent = '查询账号';
+  hideFpMsg();
 }
 
-function showFpSuccess(msg) {
-  var el = $('forgotPwdError');
-  el.textContent = msg;
-  el.style.display = 'block';
-  el.style.background = '#F0FFF4';
-  el.style.color = '#27AE60';
+// ── 忘记密码初始化 ──
+function initForgotPassword() {
+  resetForgotForm();
 }
 
-function toggleFpPwd() {
-  var inp = $('fpNewPwd'), icon = $('fpPwdIcon');
+// ── 密码可见切换（通用） ──
+function togglePwd(inputId, iconId) {
+  var inp = $(inputId), icon = $(iconId);
+  if (!inp || !icon) return;
   if (inp.type === 'password') {
     inp.type = 'text';
     icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 012 12a10.07 10.07 0 0115.94-5.94M10 16l4-4M16 10l-4 4M19.07 4.93L4.93 19.07" stroke="#6366F1" stroke-width="1.5" stroke-linecap="round"/>';
@@ -288,28 +278,51 @@ function toggleFpPwd() {
   }
 }
 
-// 显示/隐藏红色错误提示（自动判断当前表单）
+// ── 错误消息显示 ──
 function showLoginError(msg) {
-  var isRegister = $('registerFormView').style.display !== 'none';
-  var isForgot = $('forgotPwdView').style.display !== 'none';
-  var errEl;
-  if (isRegister) errEl = $('registerFormError');
-  else if (isForgot) errEl = $('forgotPwdError');
-  else errEl = $('loginFormError');
-  if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
-}
-function hideLoginError() {
-  var e1 = $('loginFormError'), e2 = $('registerFormError'), e3 = $('forgotPwdError');
-  if (e1) e1.style.display = 'none';
-  if (e2) e2.style.display = 'none';
-  if (e3) e3.style.display = 'none';
+  var el = $('loginFormError');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
 }
 
+function showRegisterError(msg) {
+  var el = $('registerFormError');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+
+function showFpError(msg) {
+  var el = $('forgotPwdError');
+  if (el) { el.textContent = msg; el.style.display = 'block'; el.style.background = '#FFF0F0'; el.style.color = '#E74C3C'; }
+}
+
+function showFpSuccess(msg) {
+  var el = $('forgotPwdError');
+  if (el) { el.textContent = msg; el.style.display = 'block'; el.style.background = '#F0FFF4'; el.style.color = '#27AE60'; }
+}
+
+function hideAllErrors() {
+  var els = ['loginFormError','registerFormError','forgotPwdError'];
+  for (var i=0;i<els.length;i++) { var e = $(els[i]); if (e) e.style.display = 'none'; }
+}
+
+function hideFpMsg() {
+  var el = $('forgotPwdError');
+  if (el) el.style.display = 'none';
+}
+
+// ── 卡片抖动 ──
+function shakeLoginCard() {
+  var card = document.querySelector('.login-container') || document.querySelector('.login-overlay');
+  if (!card) return;
+  card.style.animation = 'none';
+  card.offsetHeight;
+  card.style.animation = 'loginShake 0.5s ease';
+}
+
+// ── 表单切换 ──
 function switchLoginView(view) {
-  hideLoginError();
+  hideAllErrors();
   hideFpMsg();
-  // 关键修复：login-form 的 CSS 是 display:flex!important，必须用 '' 移除内联 style 覆盖
-  // 而不是设置 display:block（会破坏 flex 布局和 gap 间距）
+
   if (view === 'login') {
     $('loginFormView').style.display = '';
     $('registerFormView').style.display = 'none';
@@ -322,67 +335,26 @@ function switchLoginView(view) {
     $('loginFormView').style.display = 'none';
     $('registerFormView').style.display = 'none';
     $('forgotPwdView').style.display = '';
+    initForgotPassword();
   }
 }
 
-function hideFpMsg() {
-  var el = $('forgotPwdError');
-  if (el) el.style.display = 'none';
-}
-
-function toggleLoginPwd() {
-  const input = $('loginPassword');
-  const icon = $('loginPwdIcon');
-  if (input.type === 'password') {
-    input.type = 'text';
-    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
-  } else {
-    input.type = 'password';
-    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/>';
-  }
-}
-
-function toggleRegPwd() {
-  const input = $('regPassword');
-  const icon = $('regPwdIcon');
-  if (input.type === 'password') {
-    input.type = 'text';
-    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
-  } else {
-    input.type = 'password';
-    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/>';
-  }
-}
-
-// 协议页面
+// ── 协议页面 ──
 function openAgreementPage() {
   $('agreementPageOverlay').style.display = 'block';
   $('agreementPageTitle').textContent = '轻印用户协议';
-  $('agreementPageBody').innerHTML = '<h3>轻印用户协议</h3><p>更新日期：2026年6月8日</p><p>欢迎使用轻印！</p><h4>1. 服务说明</h4><p>轻印是一款旅行记忆记录工具，帮助您记录旅行足迹、管理照片和日记。</p><h4>2. 用户账号</h4><p>您需要注册账号以使用云端同步功能。请妥善保管您的账号和密码。</p><h4>3. 用户行为规范</h4><p>您承诺不利用本服务上传、发布、传播任何违法违规内容。</p><h4>4. 数据存储</h4><p>您的旅行数据将存储在本地浏览器和云端服务器。我们承诺不会将您的数据分享给第三方。</p><h4>5. 免责声明</h4><p>本产品为内测版本，可能存在不完善之处，我们会持续改进。</p><h4>6. 联系方式</h4><p>如有问题，请通过应用内"和开发者聊聊天"功能联系我们。</p>';
+  $('agreementPageBody').innerHTML = '<h3>轻印用户协议</h3><p>更新日期：2026年6月9日</p><p>欢迎使用轻印！</p><h4>1. 服务说明</h4><p>轻印是一款旅行记忆记录工具，帮助您记录旅行足迹、管理照片和日记。</p><h4>2. 用户账号</h4><p>您需要注册账号以使用云端同步功能。请妥善保管您的账号和密码。</p><h4>3. 用户行为规范</h4><p>您承诺不利用本服务上传、发布、传播任何违法违规内容。</p><h4>4. 数据存储</h4><p>您的旅行数据将存储在本地浏览器和云端服务器。我们承诺不会将您的数据分享给第三方。</p><h4>5. 免责声明</h4><p>本产品为内测版本，可能存在不完善之处，我们会持续改进。</p><h4>6. 联系方式</h4><p>如有问题，请通过应用内"和开发者聊聊天"功能联系我们。</p>';
 }
 
 function openPrivacyPage() {
   $('agreementPageOverlay').style.display = 'block';
   $('agreementPageTitle').textContent = '轻印隐私声明';
-  $('agreementPageBody').innerHTML = '<h3>轻印隐私声明</h3><p>更新日期：2026年6月8日</p><h4>1. 信息收集</h4><p>我们收集的信息包括：您注册时提供的用户名、手机号（选填），以及您使用应用过程中产生的旅行数据。</p><h4>2. 信息使用</h4><p>收集的信息仅用于为您提供旅行记录和云端同步服务，不会用于其他商业目的。</p><h4>3. 信息存储</h4><p>您的账号信息存储在 Cloudflare D1 数据库，旅行数据存储在您的浏览器本地存储中。</p><h4>4. 信息安全</h4><p>我们采用 SHA-256 哈希算法保护您的密码，使用 JWT Token 进行身份验证。</p><h4>5. 用户权利</h4><p>您可以随时导出或删除您的数据。如需彻底删除账号，请联系我们。</p><h4>6. 隐私政策更新</h4><p>我们可能会不时更新本隐私声明，更新后的声明将在应用内公布。</p>';
+  $('agreementPageBody').innerHTML = '<h3>轻印隐私声明</h3><p>更新日期：2026年6月9日</p><h4>1. 信息收集</h4><p>我们收集的信息包括：您注册时提供的用户名、手机号（选填），以及您使用应用过程中产生的旅行数据。</p><h4>2. 信息使用</h4><p>收集的信息仅用于为您提供旅行记录和云端同步服务，不会用于其他商业目的。</p><h4>3. 信息存储</h4><p>您的账号信息存储在 Cloudflare D1 数据库，旅行数据存储在您的浏览器本地存储中。</p><h4>4. 信息安全</h4><p>我们采用 SHA-256 哈希算法保护您的密码，使用 JWT Token 进行身份验证。</p><h4>5. 用户权利</h4><p>您可以随时导出或删除您的数据。如需彻底删除账号，请联系我们。</p><h4>6. 隐私政策更新</h4><p>我们可能会不时更新本隐私声明，更新后的声明将在应用内公布。</p>';
 }
 
 function closeAgreementPage() {
   $('agreementPageOverlay').style.display = 'none';
 }
-
-// 登录键盘事件
-document.addEventListener('keydown', function(e) {
-  if ($('loginOverlay').style.display === 'flex') {
-    if (e.key === 'Enter') {
-      if ($('registerFormView').style.display !== 'none') {
-        doRegister();
-      } else {
-        doLogin();
-      }
-    }
-  }
-});
 
 // ---- 权限管理系统 ----
 const PERM_STORAGE_KEY = 'qingyin_permissions';
