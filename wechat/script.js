@@ -106,17 +106,20 @@ async function doRegister() {
   finally { $('btnRegSubmit').disabled = false; $('btnRegSubmit').textContent = '注册并登录'; }
 }
 
-// 显示/隐藏红色错误提示
+// 显示/隐藏红色错误提示（自动判断当前表单）
 function showLoginError(msg) {
-  var errEl = $('loginErrorMsg');
-  errEl.textContent = msg;
-  errEl.style.display = 'block';
+  var isRegister = $('registerFormView').style.display !== 'none';
+  var errEl = isRegister ? $('registerFormError') : $('loginFormError');
+  if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
 }
 function hideLoginError() {
-  $('loginErrorMsg').style.display = 'none';
+  var e1 = $('loginFormError'), e2 = $('registerFormError');
+  if (e1) e1.style.display = 'none';
+  if (e2) e2.style.display = 'none';
 }
 
 function switchLoginView(view) {
+  hideLoginError();
   if (view === 'login') {
     $('loginFormView').style.display = 'block';
     $('registerFormView').style.display = 'none';

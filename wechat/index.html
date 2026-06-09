@@ -895,6 +895,8 @@
           </label>
           <span>已阅读并同意<span class="agreement-link" onclick="openAgreementPage()">《轻印用户协议》</span>和<span class="agreement-link" onclick="openPrivacyPage()">《轻印隐私声明》</span></span>
         </div>
+        <!-- 登录错误提示 -->
+        <div class="login-error" id="loginFormError" style="display:none;"></div>
       </div>
 
       <!-- 注册表单 -->
@@ -912,7 +914,8 @@
           <span></span>
           <span class="login-link" onclick="switchLoginView('login')">已有账号？去登录</span>
         </div>
-        <div class="login-error" id="loginErrorMsg" style="display:none;"></div>
+        <!-- 注册错误提示 -->
+        <div class="login-error" id="registerFormError" style="display:none;"></div>
       </div>
 
       <!-- 底部提示 -->
