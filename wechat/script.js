@@ -51,8 +51,9 @@ async function apiCall(path, body) {
 async function doLogin() {
   const username = $('loginUsername').value.trim();
   const password = $('loginPassword').value;
-  if (!username || !password) { showToast('请输入用户名和密码', 'error'); return; }
-  if (!$('loginAgreed').checked) { showToast('请先阅读并同意用户协议和隐私声明', 'error'); return; }
+  if (!username || !password) { showLoginError('请输入用户名和密码'); return; }
+  if (!$('loginAgreed').checked) { showLoginError('请先阅读并同意用户协议和隐私声明'); return; }
+  hideLoginError();
   $('btnLoginSubmit').disabled = true;
   $('btnLoginSubmit').textContent = '登录中...';
   try {
@@ -69,9 +70,9 @@ async function doLogin() {
       initApp();
       showToast('登录成功', 'success');
     } else {
-      showToast(data.error || '用户名或密码错误', 'error');
+      showLoginError(data.error || '用户名或密码错误');
     }
-  } catch(e) { showToast('网络连接失败，请稍后重试', 'error'); }
+  } catch(e) { showLoginError('网络连接失败，请稍后重试'); }
   finally { $('btnLoginSubmit').disabled = false; $('btnLoginSubmit').textContent = '登录'; }
 }
 
@@ -79,10 +80,11 @@ async function doRegister() {
   const username = $('regUsername').value.trim();
   const phone = $('regPhone').value.trim();
   const password = $('regPassword').value;
-  if (!username || !password) { showToast('用户名和密码不能为空', 'error'); return; }
-  if (username.length < 5 || username.length > 24) { showToast('用户名需要5-24位', 'error'); return; }
-  if (!/^[a-zA-Z0-9_]+$/.test(username)) { showToast('用户名只能包含字母、数字和下划线', 'error'); return; }
-  if (password.length < 6) { showToast('密码至少需要6位', 'error'); return; }
+  if (!username || !password) { showLoginError('用户名和密码不能为空'); return; }
+  if (username.length < 5 || username.length > 24) { showLoginError('用户名需要5-24位'); return; }
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) { showLoginError('用户名只能包含字母、数字和下划线'); return; }
+  if (password.length < 6) { showLoginError('密码至少需要6位'); return; }
+  hideLoginError();
   $('btnRegSubmit').disabled = true;
   $('btnRegSubmit').textContent = '注册中...';
   try {
@@ -98,10 +100,20 @@ async function doRegister() {
       initApp();
       showToast('注册成功！欢迎加入轻印', 'success');
     } else {
-      showToast(data.error || '注册失败', 'error');
+      showLoginError(data.error || '注册失败');
     }
-  } catch(e) { showToast('网络连接失败，请稍后重试', 'error'); }
+  } catch(e) { showLoginError('网络连接失败，请稍后重试'); }
   finally { $('btnRegSubmit').disabled = false; $('btnRegSubmit').textContent = '注册并登录'; }
+}
+
+// 显示/隐藏红色错误提示
+function showLoginError(msg) {
+  var errEl = $('loginErrorMsg');
+  errEl.textContent = msg;
+  errEl.style.display = 'block';
+}
+function hideLoginError() {
+  $('loginErrorMsg').style.display = 'none';
 }
 
 function switchLoginView(view) {
