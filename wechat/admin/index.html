@@ -6,7 +6,7 @@
 <title>轻印 · 管理后台</title>
 <style>
 /* ═══════════════════════════════════════════ */
-/* 管理后台 - 全局样式 */
+/* 全局样式 */
 /* ═══════════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -18,69 +18,58 @@
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
 
-/* ═══════════════════════════════════════════ */
-/* 登录页 */
-/* ═══════════════════════════════════════════ */
+/* ═══ 登录页 ═══ */
 .login-page{
   display:flex;align-items:center;justify-content:center;
   width:100%;min-height:100vh;background:linear-gradient(135deg, var(--primary-dark), var(--primary));
 }
 .login-card{
-  background:var(--card-bg);border-radius:16px;padding:48px 40px;
-  width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.15);
+  background:var(--card-bg);border-radius:16px;padding:40px 36px;
+  width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.15);
 }
-.login-card h1{font-size:28px;font-weight:700;text-align:center;color:var(--text);margin-bottom:8px;}
-.login-card .subtitle{text-align:center;color:var(--text-muted);font-size:14px;margin-bottom:32px;}
-.login-card label{display:block;font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px;}
+.login-card h1{font-size:26px;font-weight:700;text-align:center;color:var(--text);margin-bottom:6px;}
+.login-card .subtitle{text-align:center;color:var(--text-muted);font-size:13px;margin-bottom:28px;}
+.login-card label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;}
 .login-card input{
-  width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:var(--radius-sm);
-  font-size:15px;outline:none;transition:border-color .2s;
+  width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:var(--radius-sm);
+  font-size:15px;outline:none;transition:border-color .2s;background:#FAFBFC;
 }
-.login-card input:focus{border-color:var(--primary);}
+.login-card input:focus{border-color:var(--primary);background:#fff;}
 .login-card button{
-  width:100%;padding:14px;background:var(--primary);color:#fff;border:none;
-  border-radius:var(--radius-sm);font-size:16px;font-weight:600;cursor:pointer;
-  margin-top:20px;transition:background .2s;
+  width:100%;padding:13px;background:var(--primary);color:#fff;border:none;
+  border-radius:var(--radius-sm);font-size:15px;font-weight:600;cursor:pointer;
+  margin-top:18px;transition:background .2s;
 }
 .login-card button:hover{background:var(--primary-dark);}
-.login-card button:disabled{opacity:.6;cursor:not-allowed;}
-.login-card .error-msg{color:var(--danger);font-size:13px;text-align:center;margin-top:12px;display:none;}
+.login-card button:disabled{opacity:.55;cursor:not-allowed;}
+.login-card .error-msg{color:var(--danger);font-size:13px;text-align:center;margin-top:10px;display:none;}
+.login-card .hint-row{text-align:center;margin-top:16px;}
+.login-card .hint-row a{color:var(--primary);font-size:13px;text-decoration:none;cursor:pointer;}
+.login-card .hint-row a:hover{text-decoration:underline;}
 
-/* ═══════════════════════════════════════════ */
-/* 主布局 */
-/* ═══════════════════════════════════════════ */
+/* ═══ 主布局 ═══ */
 .app-layout{display:flex;width:100%;display:none;}
 
-/* 侧边栏 */
 .sidebar{
-  width:240px;min-height:100vh;background:var(--sidebar-bg);
-  display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;
-  z-index:100;transition:transform .3s;
+  width:250px;min-height:100vh;background:var(--sidebar-bg);
+  display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100;transition:transform .3s;
 }
-.sidebar-brand{
-  padding:24px 20px;display:flex;align-items:center;gap:12px;
-  border-bottom:1px solid rgba(255,255,255,.08);
-}
+.sidebar-brand{padding:24px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.08);}
 .sidebar-brand .logo{
-  width:36px;height:36px;background:var(--primary);border-radius:10px;
+  width:38px;height:38px;background:linear-gradient(135deg,var(--primary),#A78BFA);border-radius:10px;
   display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;
 }
-.sidebar-brand h2{font-size:18px;color:#fff;font-weight:700;}
+.sidebar-brand h2{font-size:17px;color:#fff;font-weight:700;}
 .sidebar-nav{flex:1;padding:12px 0;}
 .sidebar-nav a{
-  display:flex;align-items:center;gap:12px;padding:12px 20px;
+  display:flex;align-items:center;gap:12px;padding:11px 20px;
   color:#94A3B8;text-decoration:none;font-size:14px;font-weight:500;
   transition:all .2s;border-left:3px solid transparent;
 }
 .sidebar-nav a:hover{color:#fff;background:var(--sidebar-hover);}
-.sidebar-nav a.active{
-  color:#fff;background:rgba(99,102,241,.15);
-  border-left-color:var(--primary);
-}
+.sidebar-nav a.active{color:#fff;background:rgba(99,102,241,.15);border-left-color:var(--primary);}
 .sidebar-nav a svg{width:20px;height:20px;flex-shrink:0;}
-.sidebar-footer{
-  padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);
-}
+.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);}
 .sidebar-footer button{
   width:100%;padding:10px;background:transparent;border:1px solid rgba(255,255,255,.15);
   color:#94A3B8;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;
@@ -88,33 +77,26 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 }
 .sidebar-footer button:hover{background:rgba(239,68,68,.15);border-color:var(--danger);color:var(--danger);}
 
-/* 主内容区 */
-.main-content{flex:1;margin-left:240px;padding:32px;}
-.page-header{margin-bottom:28px;}
+.main-content{flex:1;margin-left:250px;padding:32px;max-width:calc(100% - 250px);}
+.page-header{margin-bottom:24px;}
 .page-header h2{font-size:24px;font-weight:700;margin-bottom:4px;}
 .page-header p{color:var(--text-muted);font-size:14px;}
 
 /* 统计卡片 */
-.stats-grid{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-  gap:16px;margin-bottom:28px;
-}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
 .stat-card{
   background:var(--card-bg);border-radius:var(--radius);padding:20px 24px;
   box-shadow:0 1px 3px rgba(0,0,0,.04);border:1px solid var(--border);
 }
-.stat-card .stat-icon{
-  width:40px;height:40px;border-radius:10px;
-  display:flex;align-items:center;justify-content:center;margin-bottom:12px;
-}
+.stat-card .stat-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
 .stat-card .stat-icon.blue{background:rgba(99,102,241,.1);color:var(--primary);}
 .stat-card .stat-icon.green{background:rgba(16,185,129,.1);color:var(--success);}
 .stat-card .stat-icon.amber{background:rgba(245,158,11,.1);color:var(--warning);}
 .stat-card .stat-icon.red{background:rgba(239,68,68,.1);color:var(--danger);}
-.stat-card .stat-value{font-size:32px;font-weight:700;line-height:1.2;}
+.stat-card .stat-value{font-size:30px;font-weight:700;line-height:1.2;}
 .stat-card .stat-label{font-size:13px;color:var(--text-muted);margin-top:4px;}
 
-/* 表格 */
+/* 卡片&表格 */
 .card{
   background:var(--card-bg);border-radius:var(--radius);
   box-shadow:0 1px 3px rgba(0,0,0,.04);border:1px solid var(--border);
@@ -124,14 +106,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
   padding:16px 20px;border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
 }
-.card-header h3{font-size:16px;font-weight:600;}
+.card-header h3{font-size:15px;font-weight:600;}
 .card-body{padding:0;}
 
-/* 搜索栏 */
-.search-bar{display:flex;gap:8px;}
+.search-bar{display:flex;gap:8px;flex-wrap:wrap;}
 .search-bar input{
   padding:8px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);
-  font-size:13px;outline:none;width:200px;transition:border-color .2s;
+  font-size:13px;outline:none;width:180px;transition:border-color .2s;
 }
 .search-bar input:focus{border-color:var(--primary);}
 .search-bar button{
@@ -140,45 +121,36 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 }
 .search-bar button:hover{background:var(--primary-dark);}
 
-/* 用户表格 */
 .user-table{width:100%;border-collapse:collapse;}
 .user-table th{
-  text-align:left;padding:12px 20px;font-size:12px;font-weight:600;
+  text-align:left;padding:12px 18px;font-size:12px;font-weight:600;
   color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;
   background:#F8FAFC;border-bottom:1px solid var(--border);
 }
 .user-table td{
-  padding:14px 20px;font-size:14px;border-bottom:1px solid var(--border);
+  padding:13px 18px;font-size:14px;border-bottom:1px solid var(--border);
   color:var(--text);vertical-align:middle;
 }
 .user-table tbody tr:hover{background:#F8FAFC;}
 .user-table .user-cell{display:flex;align-items:center;gap:10px;}
 .user-table .user-avatar{
-  width:32px;height:32px;border-radius:50%;background:var(--primary);
+  width:34px;height:34px;border-radius:50%;background:var(--primary);
   color:#fff;display:flex;align-items:center;justify-content:center;
   font-size:13px;font-weight:600;flex-shrink:0;
 }
 .user-table .user-name{font-weight:600;}
 .user-table .user-nickname{color:var(--text-muted);font-size:12px;}
-.user-table .empty-state{padding:48px;text-align:center;color:var(--text-muted);}
+.user-table .empty-state{padding:44px;text-align:center;color:var(--text-muted);}
 
-/* 操作按钮 */
-.btn-sm{
-  padding:6px 14px;border:none;border-radius:6px;font-size:12px;
-  font-weight:500;cursor:pointer;transition:all .2s;
-}
-.btn-danger{background:rgba(239,68,68,.1);color:var(--danger);}
+.btn-sm{padding:6px 14px;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;}
+.btn-danger{background:rgba(239,68,68,.08);color:var(--danger);border:1px solid rgba(239,68,68,.15);}
 .btn-danger:hover{background:var(--danger);color:#fff;}
-.btn-outline{
-  background:transparent;border:1px solid var(--border);color:var(--text-muted);
-}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text-muted);}
 .btn-outline:hover{border-color:var(--primary);color:var(--primary);}
+.btn-primary-sm{background:var(--primary);color:#fff;border:none;}
+.btn-primary-sm:hover{background:var(--primary-dark);}
 
-/* 分页 */
-.pagination{
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  padding:16px 20px;border-top:1px solid var(--border);
-}
+.pagination{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px 20px;border-top:1px solid var(--border);}
 .pagination button{
   padding:6px 14px;border:1px solid var(--border);background:var(--card-bg);
   border-radius:6px;font-size:13px;cursor:pointer;transition:all .2s;
@@ -192,7 +164,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
   position:fixed;top:20px;right:20px;padding:14px 24px;border-radius:var(--radius-sm);
   color:#fff;font-size:14px;font-weight:500;z-index:9999;
   transform:translateX(120%);transition:transform .3s ease;
-  box-shadow:0 4px 20px rgba(0,0,0,.15);
+  box-shadow:0 4px 20px rgba(0,0,0,.15);max-width:380px;
 }
 .toast.show{transform:translateX(0);}
 .toast.success{background:var(--success);}
@@ -202,15 +174,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 /* 模态框 */
 .modal-overlay{
   display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
-  z-index:1000;align-items:center;justify-content:center;
+  z-index:1000;align-items:center;justify-content:center;padding:20px;
 }
 .modal-overlay.active{display:flex;}
 .modal{
   background:var(--card-bg);border-radius:16px;padding:28px;
-  width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2);
+  width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.2);
 }
 .modal h3{font-size:18px;font-weight:700;margin-bottom:8px;}
-.modal p{color:var(--text-muted);font-size:14px;margin-bottom:20px;line-height:1.6;}
+.modal p{color:var(--text-muted);font-size:14px;margin-bottom:20px;line-height:1.7;}
 .modal .modal-actions{display:flex;gap:10px;justify-content:flex-end;}
 .modal .modal-actions button{
   padding:10px 24px;border:none;border-radius:8px;font-size:14px;
@@ -221,28 +193,69 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 .modal .btn-confirm{background:var(--danger);color:#fff;}
 .modal .btn-confirm:hover{background:#DC2626;}
 
+/* ═══ 设置页面 ═══ */
+.settings-section{margin-bottom:28px;}
+.settings-section h3{font-size:16px;font-weight:600;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.settings-form{background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border);padding:24px;}
+.form-group{margin-bottom:18px;}
+.form-group label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;}
+.form-group label .desc{font-weight:400;color:var(--text-muted);font-size:12px;margin-left:4px;}
+.form-group input,.form-group textarea{
+  width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  font-size:14px;outline:none;transition:border-color .2s;background:#FAFBFC;
+}
+.form-group input:focus,.form-group textarea:focus{border-color:var(--primary);background:#fff;}
+.form-group textarea{resize:vertical;font-family:inherit;min-height:80px;}
+.form-group .input-with-btn{display:flex;gap:8px;}
+.form-group .input-with-btn input{flex:1;}
+.form-group .input-with-btn button{white-space:nowrap;padding:11px 20px;}
+
+.recovery-key-box{
+  background:linear-gradient(135deg,#F0FDF4,#ECFEFF);border:1.5px dashed #86EFAC;
+  border-radius:var(--radius-sm);padding:16px 20px;margin-top:10px;
+}
+.recovery-key-box .key-label{font-size:12px;color:var(--text-muted);margin-bottom:6px;}
+.recovery-key-box .key-value{
+  font-family:'Courier New',monospace;font-size:16px;font-weight:700;
+  letter-spacing:2px;color:#059669;word-break:break-all;user-select:all;
+}
+.warning-box{
+  background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.25);
+  border-radius:var(--radius-sm);padding:14px 18px;margin-top:16px;font-size:13px;color:#92400E;line-height:1.6;
+}
+
+.status-badge{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 12px;
+  border-radius:20px;font-size:12px;font-weight:600;
+}
+.status-badge.ok{background:rgba(16,185,129,.1);color:#059669;}
+.status-badge.err{background:rgba(239,68,68,.1);color:#DC2626;}
+.status-dot{width:7px;height:7px;border-radius:50%;}
+.status-dot.green{background:var(--success);}
+.status-dot.red{background:var(--danger);}
+
 /* 响应式 */
 @media(max-width:768px){
   .sidebar{transform:translateX(-100%);}
   .sidebar.open{transform:translateX(0);}
-  .main-content{margin-left:0;padding:20px;}
+  .main-content{margin-left:0;padding:20px;max-width:100%;}
   .stats-grid{grid-template-columns:repeat(2,1fr);}
   .user-table{display:block;overflow-x:auto;}
-  .search-bar input{width:140px;}
+  .search-bar input{width:130px;}
   .mobile-menu-btn{
     display:flex!important;position:fixed;top:14px;left:14px;z-index:200;
-    width:36px;height:36px;align-items:center;justify-content:center;
+    width:38px;height:38px;align-items:center;justify-content:center;
     background:var(--card-bg);border:1px solid var(--border);border-radius:8px;
-    cursor:pointer;font-size:18px;
+    cursor:pointer;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.08);
   }
 }
 @media(min-width:769px){.mobile-menu-btn{display:none!important;}}
 
-/* 图表简化 */
-.chart-bars{display:flex;align-items:flex-end;gap:12px;height:140px;padding:20px;}
+/* 图表 */
+.chart-bars{display:flex;align-items:flex-end;gap:10px;height:140px;padding:20px;}
 .chart-bar-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;}
 .chart-bar{
-  width:100%;max-width:40px;background:var(--primary);
+  width:100%;max-width:40px;background:linear-gradient(to top,var(--primary),var(--primary-light));
   border-radius:6px 6px 0 0;transition:height .5s ease;min-height:4px;
 }
 .chart-bar-label{font-size:11px;color:var(--text-muted);}
@@ -252,16 +265,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 <body>
 
 <!-- ═══════════════════════════════════════════ -->
-<!-- 登录页面 -->
+<!-- 登录页 -->
 <!-- ═══════════════════════════════════════════ -->
 <div class="login-page" id="loginPage">
   <div class="login-card">
     <h1>轻印 · 后台管理</h1>
     <p class="subtitle">请输入管理员密码以继续</p>
-    <label for="adminPwd">管理员密码</label>
-    <input type="password" id="adminPwd" placeholder="请输入管理员密码" autocomplete="off" onkeydown="if(event.key==='Enter')doAdminLogin()">
+    <label>管理员密码</label>
+    <input type="password" id="adminPwd" placeholder="请输入管理员密码" autocomplete="current-password"
+           onkeydown="if(event.key==='Enter')doAdminLogin()">
     <button onclick="doAdminLogin()" id="btnAdminLogin">登录后台</button>
     <p class="error-msg" id="loginError"></p>
+    <div class="hint-row">
+      <a onclick="showRecoveryLogin()">忘记密码？使用管理员密钥登录</a>
+    </div>
   </div>
 </div>
 
@@ -269,10 +286,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 <!-- 主布局 -->
 <!-- ═══════════════════════════════════════════ -->
 <div class="app-layout" id="appLayout">
-  <!-- 移动端菜单按钮 -->
   <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
 
-  <!-- 侧边栏 -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div class="logo">轻</div>
@@ -287,6 +302,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
         用户管理
       </a>
+      <a href="#" data-page="settings" onclick="switchPage('settings',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        安全设置
+      </a>
     </nav>
     <div class="sidebar-footer">
       <button onclick="doAdminLogout()">
@@ -296,22 +315,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
     </div>
   </aside>
 
-  <!-- 主内容区 -->
   <main class="main-content" id="mainContent">
-    <!-- ══════════ 仪表盘 ══════════ -->
+
+    <!-- ═══ 仪表盘 ═══ -->
     <div id="page-dashboard" class="page-content">
       <div class="page-header">
         <h2>仪表盘</h2>
         <p>轻印产品数据概览</p>
       </div>
-      <div class="stats-grid" id="statsGrid">
-        <!-- 动态填充 -->
-      </div>
+      <div class="stats-grid" id="statsGrid"></div>
       <div class="card">
         <div class="card-header"><h3>近7天注册趋势</h3></div>
-        <div class="chart-bars" id="chartBars">
-          <p style="padding:20px;color:var(--text-muted)">加载中...</p>
-        </div>
+        <div class="chart-bars" id="chartBars"><p style="padding:20px;color:var(--text-muted)">加载中...</p></div>
       </div>
       <div class="card">
         <div class="card-header"><h3>最近注册用户</h3></div>
@@ -324,7 +339,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
       </div>
     </div>
 
-    <!-- ══════════ 用户管理 ══════════ -->
+    <!-- ═══ 用户管理 ═══ -->
     <div id="page-users" class="page-content" style="display:none;">
       <div class="page-header">
         <h2>用户管理</h2>
@@ -337,33 +352,100 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
             <input type="text" id="userSearch" placeholder="搜索用户名..." onkeydown="if(event.key==='Enter')searchUsers()">
             <button onclick="searchUsers()">搜索</button>
             <button class="btn-outline btn-sm" onclick="clearSearch()">清除</button>
-            <button class="btn-sm btn-danger" onclick="showClearAllModal()" style="margin-left:8px;">清空全部数据</button>
+            <button class="btn-sm btn-danger" onclick="showClearAllModal()" style="margin-left:8px;">清空全部</button>
           </div>
         </div>
         <div class="card-body" style="overflow-x:auto;">
           <table class="user-table">
-            <thead>
-              <tr>
-                <th>ID</th><th>用户</th><th>注册时间</th><th>更新时间</th><th>操作</th>
-              </tr>
-            </thead>
+            <thead><tr><th>ID</th><th>用户</th><th>注册时间</th><th>更新时间</th><th>操作</th></tr></thead>
             <tbody id="allUsersTbody"><tr><td class="empty-state" colspan="5">加载中...</td></tr></tbody>
           </table>
         </div>
         <div class="pagination" id="userPagination"></div>
       </div>
     </div>
+
+    <!-- ═══ 安全设置 ═══ -->
+    <div id="page-settings" class="page-content" style="display:none;">
+      <div class="page-header">
+        <h2>安全设置</h2>
+        <p>管理后台安全配置、修改密码和恢复密钥</p>
+      </div>
+
+      <div class="settings-section">
+        <h3>修改管理员密码</h3>
+        <div class="settings-form">
+          <div class="form-group">
+            <label>当前密码 <span class="desc">（用于验证身份）</span></label>
+            <input type="password" id="curPwd" placeholder="输入当前管理员密码">
+          </div>
+          <div class="form-group">
+            <label>新密码 <span class="desc">（至少6位，建议混合字母数字符号）</span></label>
+            <input type="password" id="newPwd" placeholder="输入新密码" minlength="6">
+          </div>
+          <div class="form-group">
+            <label>确认新密码</label>
+            <input type="password" id="confirmPwd" placeholder="再次输入新密码">
+          </div>
+          <button class="btn-primary-sm btn-sm" style="padding:11px 28px;font-size:14px;" onclick="changePassword()">确认修改密码</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>管理员恢复密钥</h3>
+        <div class="settings-form">
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;line-height:1.7;">
+            如果忘记管理员密码，可以使用下面的<strong>恢复密钥</strong>重置密码。
+            请将此密钥妥善保存在安全的地方，<strong style="color:var(--danger)">不要分享给任何人</strong>。
+          </p>
+          <div class="recovery-key-box" id="recoveryKeyBox">
+            <div class="key-label">当前恢复密钥：</div>
+            <div class="key-value" id="recoveryKeyDisplay">-</div>
+          </div>
+          <div class="warning-box">
+            <strong>⚠ 重要提示：</strong><br>
+            • 恢复密钥与密码绑定，每次修改密码后会自动生成新密钥<br>
+            • 密码和密钥均存储在浏览器本地，清除浏览器数据会丢失<br>
+            • 建议截图或抄写下方的密钥作为备份
+          </div>
+          <div class="form-group" style="margin-top:18px;margin-bottom:0;">
+            <label>使用恢复密钥重置密码</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <textarea id="resetKeyInput" placeholder="粘贴恢复密钥..." style="flex:1;min-width:200px;"></textarea>
+              <button class="btn-outline btn-sm" onclick="verifyAndReset()" style="align-self:flex-start;">验证并重置</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>系统信息</h3>
+        <div class="settings-form">
+          <div style="display:flex;flex-wrap:wrap;gap:20px;font-size:13px;">
+            <div>
+              <span style="color:var(--text-muted)">API 连接状态：</span>
+              <span class="status-badge" id="apiStatus"><span class="status-dot red"></span> 未检测</span>
+            </div>
+            <div>
+              <span style="color:var(--text-muted)">认证方式：</span>
+              <span style="color:var(--primary);font-weight:600;">本地存储 + SHA-256</span>
+            </div>
+            <div>
+              <span style="color:var(--text-muted)">最后修改密码：</span>
+              <span id="pwdChangeTime">首次设置</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
-<!-- ═══════════════════════════════════════════ -->
 <!-- Toast -->
-<!-- ═══════════════════════════════════════════ -->
 <div class="toast" id="toast"></div>
 
-<!-- ═══════════════════════════════════════════ -->
 <!-- 清空确认模态框 -->
-<!-- ═══════════════════════════════════════════ -->
 <div class="modal-overlay" id="clearAllModal">
   <div class="modal">
     <h3>⚠️ 清空全部用户数据</h3>
@@ -375,9 +457,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════ -->
-<!-- 删除用户确认模态框 -->
-<!-- ═══════════════════════════════════════════ -->
+<!-- 删除用户模态框 -->
 <div class="modal-overlay" id="deleteUserModal">
   <div class="modal">
     <h3>删除用户</h3>
@@ -389,53 +469,166 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
   </div>
 </div>
 
+<!-- 恢复密钥登录模态框 -->
+<div class="modal-overlay" id="recoveryModal">
+  <div class="modal">
+    <h3>🔑 使用恢复密钥登录</h3>
+    <p>请输入管理员恢复密钥来重置并设置新密码。</p>
+    <div class="form-group" style="margin-bottom:16px;">
+      <label>恢复密钥</label>
+      <input type="text" id="recKeyInput" placeholder="粘贴你的恢复密钥...">
+    </div>
+    <div class="form-group" style="margin-bottom:16px;">
+      <label>新密码（重置后的新密码）</label>
+      <input type="password" id="recNewPwd" placeholder="输入新密码">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('recoveryModal')">取消</button>
+      <button class="btn-confirm" style="background:var(--primary);" onclick="doRecoveryLogin()">确认重置并登录</button>
+    </div>
+  </div>
+</div>
+
+
 <!-- ═══════════════════════════════════════════ -->
 <!-- JavaScript -->
 <!-- ═══════════════════════════════════════════ -->
 <script>
-// API 配置
-const API_BASE = '/api';
-let adminToken = localStorage.getItem('qingyin_admin_token');
-let currentPage = 'dashboard';
-let userPage = 1, userSearch = '';
+// ═══════════════════════════════════════════
+// 常量 & 配置
+// ═══════════════════════════════════════════
+const ADMIN_STORAGE_KEY = 'qingyin_admin_v3';
+const DEFAULT_PASSWORD = 'qingyin2024admin';
+let adminToken = null;
 
-// 页面加载
-document.addEventListener('DOMContentLoaded', function() {
-  if (adminToken) {
-    checkAdminAuth();
+// ═══════════════════════════════════════════
+// 工具函数
+// ═══════════════════════════════════════════
+async function sha256(str) {
+  const buf = new TextEncoder().encode(str);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function generateRecoveryKey(pwdHash) {
+  // 基于密码哈希生成一个可读的恢复密钥
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let seed = 0;
+  for (let i = 0; i < pwdHash.length; i++) {
+    seed = ((seed << 5) - seed) + pwdHash.charCodeAt(i);
+    seed = seed & seed;
+  }
+  const rng = mulberry32(seed >>> 0);
+  let key = '';
+  const groups = [4, 4, 4, 4, 4, 4];
+  groups.forEach((len, gi) => {
+    if (gi > 0) key += '-';
+    for (let i = 0; i < len; i++) {
+      key += chars[Math.floor(rng() * chars.length)];
+    }
+  });
+  return key;
+}
+
+function mulberry32(a) {
+  return function() {
+    let t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function getStoredConfig() {
+  try {
+    var raw = localStorage.getItem(ADMIN_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return null;
+}
+
+function saveConfig(cfg) {
+  localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(cfg));
+}
+
+async function getOrCreateConfig() {
+  var cfg = getStoredConfig();
+  if (!cfg) {
+    var hash = await sha256(DEFAULT_PASSWORD);
+    cfg = {
+      pwdHash: hash,
+      recoveryKey: generateRecoveryKey(hash),
+      createdAt: Date.now(),
+      changedAt: null
+    };
+    saveConfig(cfg);
+  }
+  return cfg;
+}
+
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (type || 'info') + ' show';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function() { t.classList.remove('show'); }, 3200);
+}
+
+function escapeHtml(str) { if (!str) return ''; var d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+
+function formatDate(dateStr) {
+  if (!dateStr) return '-';
+  try {
+    var d = new Date(dateStr.replace(' ', 'T') + (dateStr.includes('Z') ? '' : 'Z'));
+    if (isNaN(d.getTime())) return dateStr;
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+
+           ' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  } catch(e) { return dateStr; }
+}
+
+// ═══════════════════════════════════════════
+// 页面初始化 & 登录流程
+// ═══════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', async function() {
+  var storedToken = sessionStorage.getItem('qingyin_admin_session');
+  if (storedToken) {
+    adminToken = storedToken;
+    showApp();
+    return;
   }
 });
 
-// ═══════════════════════════════════════════
-// 登录
-// ═══════════════════════════════════════════
 async function doAdminLogin() {
-  const pwd = document.getElementById('adminPwd').value;
-  const btn = document.getElementById('btnAdminLogin');
-  const errEl = document.getElementById('loginError');
+  var pwd = document.getElementById('adminPwd').value;
+  var btn = document.getElementById('btnAdminLogin');
+  var errEl = document.getElementById('loginError');
 
   if (!pwd) { showLoginError('请输入管理员密码'); return; }
 
   btn.disabled = true;
-  btn.textContent = '登录中...';
+  btn.textContent = '验证中...';
   errEl.style.display = 'none';
 
+  await sleep(300);
+
   try {
-    const res = await fetch(API_BASE + '/admin/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pwd })
-    });
-    const data = await res.json();
-    if (data.ok) {
-      adminToken = data.token;
-      localStorage.setItem('qingyin_admin_token', adminToken);
+    var cfg = await getOrCreateConfig();
+    var inputHash = await sha256(pwd);
+
+    if (inputHash === cfg.pwdHash) {
+      adminToken = genSessionToken();
+      sessionStorage.setItem('qingyin_admin_session', adminToken);
+      document.getElementById('adminPwd').value = '';
       showApp();
     } else {
-      showLoginError(data.error || '密码错误');
+      showLoginError('密码错误，请重新输入');
+      // 振动反馈
+      var card = document.querySelector('.login-card');
+      card.style.animation = 'none';
+      setTimeout(function() { card.style.animation = ''; }, 10);
     }
   } catch(e) {
-    showLoginError('网络连接失败，请稍后重试');
+    showLoginError('系统错误，请刷新重试');
   } finally {
     btn.disabled = false;
     btn.textContent = '登录后台';
@@ -443,53 +636,86 @@ async function doAdminLogin() {
 }
 
 function showLoginError(msg) {
-  const errEl = document.getElementById('loginError');
-  errEl.textContent = msg;
-  errEl.style.display = 'block';
+  var el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.style.display = 'block';
 }
 
-// ═══════════════════════════════════════════
-// 鉴权检查
-// ═══════════════════════════════════════════
-async function checkAdminAuth() {
-  try {
-    const res = await fetch(API_BASE + '/admin/stats', {
-      headers: { 'Authorization': 'Bearer ' + adminToken }
-    });
-    if (res.ok) {
-      showApp();
-    } else {
-      localStorage.removeItem('qingyin_admin_token');
-      adminToken = null;
-    }
-  } catch(e) {
-    // 网络错误，假设 token 有效（离线使用）
-    showApp();
+function genSessionToken() {
+  var arr = new Uint8Array(24);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+
+// ═══ 恢复密钥登录 ═══
+function showRecoveryLogin() {
+  document.getElementById('recKeyInput').value = '';
+  document.getElementById('recNewPwd').value = '';
+  document.getElementById('recoveryModal').classList.add('active');
+}
+
+async function doRecoveryLogin() {
+  var key = document.getElementById('recKeyInput').value.trim();
+  var newPwd = document.getElementById('recNewPwd').value;
+
+  if (!key) { showToast('请输入恢复密钥', 'error'); return; }
+  if (!newPwd || newPwd.length < 6) { showToast('新密码至少6位', 'error'); return; }
+
+  var cfg = getStoredConfig();
+  if (!cfg) { showToast('系统异常，无存储记录', 'error'); return; }
+
+  if (key !== cfg.recoveryKey) {
+    showToast('恢复密钥不正确', 'error');
+    return;
   }
+
+  // 重置密码
+  var newHash = await sha256(newPwd);
+  cfg.pwdHash = newHash;
+  cfg.recoveryKey = generateRecoveryKey(newHash);
+  cfg.changedAt = Date.now();
+  saveConfig(cfg);
+
+  closeModal('recoveryModal');
+  adminToken = genSessionToken();
+  sessionStorage.setItem('qingyin_admin_session', adminToken);
+  showToast('密码已成功重置！', 'success');
+  showApp();
 }
 
+// ═══ 显示主应用 ═══
 function showApp() {
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('appLayout').style.display = 'flex';
   loadDashboard();
+  refreshSettingsInfo();
+  checkApiStatus();
+}
+
+function doAdminLogout() {
+  sessionStorage.removeItem('qingyin_admin_session');
+  adminToken = null;
+  document.getElementById('appLayout').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('adminPwd').value = '';
+  document.getElementById('loginError').style.display = 'none';
 }
 
 // ═══════════════════════════════════════════
 // 页面切换
 // ═══════════════════════════════════════════
 function switchPage(page, el) {
-  currentPage = page;
-  // 更新侧边栏 active
-  document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+  document.querySelectorAll('.sidebar-nav a').forEach(function(a) { a.classList.remove('active'); });
   if (el) el.classList.add('active');
-  // 显示/隐藏内容
-  document.querySelectorAll('.page-content').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.page-content').forEach(function(p) { p.style.display = 'none'; });
   document.getElementById('page-' + page).style.display = 'block';
-  // 关闭移动端侧边栏
   document.getElementById('sidebar').classList.remove('open');
 
   if (page === 'dashboard') loadDashboard();
   if (page === 'users') { userPage = 1; loadUsers(); }
+  if (page === 'settings') refreshSettingsInfo();
 }
 
 function toggleSidebar() {
@@ -501,45 +727,63 @@ function toggleSidebar() {
 // ═══════════════════════════════════════════
 async function loadDashboard() {
   try {
-    const res = await fetch(API_BASE + '/admin/stats', {
-      headers: { 'Authorization': 'Bearer ' + adminToken }
-    });
-    if (res.status === 401) { handleAuthExpired(); return; }
-    const data = await res.json();
-    if (data.ok) {
+    var data = await apiRequest('/admin/stats');
+    if (data && data.ok) {
       renderStats(data.stats);
-      renderChart(data.stats.daily);
-      renderRecentUsers(data.stats.recent);
+      renderChart(data.stats.daily || []);
+      renderRecentUsers(data.stats.recent || []);
+    } else {
+      renderStatsEmpty();
+      renderChartEmpty();
+      renderRecentUsers([]);
     }
   } catch(e) {
-    showToast('加载统计数据失败', 'error');
+    renderStatsEmpty(true);
+    renderChartEmpty();
+    renderRecentUsers([]);
   }
 }
 
 function renderStats(stats) {
   document.getElementById('statsGrid').innerHTML = [
-    { icon:'blue', label:'总用户数', value:stats.total, svg:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/>' },
-    { icon:'green', label:'今日新增', value:stats.today, svg:'<path d="M12 20v-6M9 17l3-3 3 3"/><circle cx="12" cy="12" r="10"/>' },
-    { icon:'amber', label:'本周新增', value:stats.week, svg:'<path d="M3 3v18h18"/><path d="M7 16l4-8 4 4 4-6"/>' },
-    { icon:'red', label:'本月新增', value:stats.month, svg:'<path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path d="M12 7v5l3 3"/>' }
+    { icon:'blue', label:'总用户数', value:stats.total||0, svg:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/>' },
+    { icon:'green', label:'今日新增', value:stats.today||0, svg:'<path d="M12 20v-6M9 17l3-3 3 3"/><circle cx="12" cy="12" r="10"/>' },
+    { icon:'amber', label:'本周新增', value:stats.week||0, svg:'<path d="M3 3v18h18"/><path d="M7 16l4-8 4 4 4-6"/>' },
+    { icon:'red', label:'本月新增', value:stats.month||0, svg:'<path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path d="M12 7v5l3 3"/>' }
   ].map(function(s) {
     return '<div class="stat-card"><div class="stat-icon '+s.icon+'"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+s.svg+'</svg></div><div class="stat-value">'+s.value+'</div><div class="stat-label">'+s.label+'</div></div>';
   }).join('');
 }
 
+function renderStatsEmpty(err) {
+  var msg = err ? 'API 连接失败' : '--';
+  document.getElementById('statsGrid').innerHTML = [
+    { icon:'blue', label:'总用户数', value:msg },
+    { icon:'green', label:'今日新增', value:msg },
+    { icon:'amber', label:'本周新增', value:msg },
+    { icon:'red', label:'本月新增', value:msg }
+  ].map(function(s) {
+    return '<div class="stat-card"><div class="stat-icon '+s.icon+'"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg></div><div class="stat-value">'+s.value+'</div><div class="stat-label">'+s.label+'</div></div>';
+  }).join('');
+}
+
 function renderChart(daily) {
-  const container = document.getElementById('chartBars');
+  var container = document.getElementById('chartBars');
   if (!daily || daily.length === 0) {
     container.innerHTML = '<p style="padding:20px;color:var(--text-muted);text-align:center;">暂无注册数据</p>';
     return;
   }
-  const maxVal = Math.max.apply(null, daily.map(function(d) { return d.count; })) || 1;
+  var maxVal = Math.max.apply(null, daily.map(function(d) { return d.count; })) || 1;
   container.innerHTML = daily.map(function(d) {
     var h = Math.max(4, (d.count / maxVal) * 100);
-    var dateParts = d.date.split('-');
-    var label = dateParts.length >= 3 ? dateParts[1] + '/' + dateParts[2] : d.date;
-    return '<div class="chart-bar-item"><div class="chart-bar-value">'+d.count+'</div><div class="chart-bar" style="height:'+h+'px;"></div><div class="chart-bar-label">'+label+'</div></div>';
+    var dp = d.date.split('-');
+    var lbl = dp.length >= 3 ? dp[1]+'/'+dp[2] : d.date;
+    return '<div class="chart-bar-item"><div class="chart-bar-value">'+d.count+'</div><div class="chart-bar" style="height:'+h+'px;"></div><div class="chart-bar-label">'+lbl+'</div></div>';
   }).join('');
+}
+
+function renderChartEmpty() {
+  document.getElementById('chartBars').innerHTML = '<p style="padding:30px;color:var(--text-muted);text-align:center;">暂无数据（Worker API 部署后将自动加载）</p>';
 }
 
 function renderRecentUsers(users) {
@@ -556,66 +800,62 @@ function renderRecentUsers(users) {
 // ═══════════════════════════════════════════
 // 用户管理
 // ═══════════════════════════════════════════
+var userPage = 1, userSearch = '', deleteUserId = null;
+
 async function loadUsers() {
   try {
     var params = '?page=' + userPage + '&limit=20';
     if (userSearch) params += '&search=' + encodeURIComponent(userSearch);
 
-    var res = await fetch(API_BASE + '/admin/users' + params, {
-      headers: { 'Authorization': 'Bearer ' + adminToken }
-    });
-    if (res.status === 401) { handleAuthExpired(); return; }
-    var data = await res.json();
-
-    if (data.ok) {
-      renderUserTable(data.users);
-      renderPagination(data.total, data.page, data.limit);
-      document.getElementById('userCountLabel').textContent = '（共 ' + data.total + ' 人）';
+    var data = await apiRequest('/admin/users' + params);
+    if (data && data.ok) {
+      renderUserTable(data.users || []);
+      renderPagination(data.total || 0, data.page || 1, data.limit || 20);
+      document.getElementById('userCountLabel').textContent = '（共 ' + (data.total || 0) + ' 人）';
+    } else {
+      renderUserTable([]);
+      document.getElementById('userPagination').innerHTML = '';
+      document.getElementById('userCountLabel').textContent = '';
     }
   } catch(e) {
-    showToast('加载用户列表失败', 'error');
+    renderUserTable([]);
+    document.getElementById('userPagination').innerHTML = '';
+    document.getElementById('userCountLabel').textContent = '';
   }
 }
 
 function renderUserTable(users) {
   var tbody = document.getElementById('allUsersTbody');
   if (!users || users.length === 0) {
-    tbody.innerHTML = '<tr><td class="empty-state" colspan="5">' + (userSearch ? '未找到匹配的用户' : '暂无注册用户') + '</td></tr>';
+    tbody.innerHTML = '<tr><td class="empty-state" colspan="5">' + (userSearch ? '未找到匹配的用户' : '暂无注册用户（需部署 Worker API）') + '</td></tr>';
     return;
   }
   tbody.innerHTML = users.map(function(u) {
-    return '<tr>' +
-      '<td>#' + u.id + '</td>' +
-      '<td><div class="user-cell"><div class="user-avatar">' + u.username.charAt(0).toUpperCase() + '</div><div><div class="user-name">' + escapeHtml(u.username) + '</div><div class="user-nickname">' + escapeHtml(u.nickname || '') + '</div></div></div></td>' +
-      '<td>' + formatDate(u.created_at) + '</td>' +
-      '<td>' + formatDate(u.updated_at) + '</td>' +
-      '<td><button class="btn-sm btn-danger" onclick="showDeleteModal(' + u.id + ',\'' + escapeHtml(u.username).replace(/'/g, "\\'") + '\')">删除</button></td>' +
-      '</tr>';
+    return '<tr>'+
+      '<td>#'+u.id+'</td>'+
+      '<td><div class="user-cell"><div class="user-avatar">'+u.username.charAt(0).toUpperCase()+'</div><div><div class="user-name">'+escapeHtml(u.username)+'</div><div class="user-nickname">'+escapeHtml(u.nickname||'')+'</div></div></div></td>'+
+      '<td>'+formatDate(u.created_at)+'</td>'+
+      '<td>'+formatDate(u.updated_at)+'</td>'+
+      '<td><button class="btn-sm btn-danger" onclick="showDeleteModal('+u+',\''+escapeHtml(u.username).replace(/'/g,"\\'")+'\')">删除</button></td>'+
+    '</tr>';
   }).join('');
 }
 
 function renderPagination(total, page, limit) {
   var container = document.getElementById('userPagination');
   var totalPages = Math.ceil(total / limit);
-  if (totalPages <= 1) {
-    container.innerHTML = total > 0 ? '<div class="page-info">共 ' + total + ' 条记录</div>' : '';
-    return;
-  }
-  var html = '<button ' + (page <= 1 ? 'disabled' : '') + ' onclick="goPage(' + (page-1) + ')">上一页</button>';
-  html += '<span class="page-info">第 ' + page + ' / ' + totalPages + ' 页（共 ' + total + ' 条）</span>';
-  html += '<button ' + (page >= totalPages ? 'disabled' : '') + ' onclick="goPage(' + (page+1) + ')">下一页</button>';
-  container.innerHTML = html;
+  if (totalPages <= 1) { container.innerHTML = total > 0 ? '<div class="page-info">共 ' + total + ' 条记录</div>' : ''; return; }
+  container.innerHTML =
+    '<button '+(page<=1?'disabled':'')+' onclick="goPage('+(page-1)+')">上一页</button>' +
+    '<span class="page-info">第 '+page+' / '+totalPages+' 页（共 '+total+' 条）</span>' +
+    '<button '+(page>=totalPages?'disabled':'')+' onclick="goPage('+(page+1)+')">下一页</button>';
 }
 
 function goPage(p) { userPage = p; loadUsers(); }
 function searchUsers() { userSearch = document.getElementById('userSearch').value.trim(); userPage = 1; loadUsers(); }
 function clearSearch() { document.getElementById('userSearch').value = ''; userSearch = ''; userPage = 1; loadUsers(); }
 
-// ═══════════════════════════════════════════
-// 删除&清空
-// ═══════════════════════════════════════════
-var deleteUserId = null;
-
+// ═══ 删除 & 清空 ═══
 function showDeleteModal(id, name) {
   deleteUserId = id;
   document.getElementById('deleteUserName').textContent = name;
@@ -623,24 +863,17 @@ function showDeleteModal(id, name) {
 }
 
 async function confirmDeleteUser() {
-  if (!deleteUserId) return;
+  if (deleteUserId == null) return;
   closeModal('deleteUserModal');
   try {
-    var res = await fetch(API_BASE + '/admin/users?id=' + deleteUserId, {
-      method: 'DELETE',
-      headers: { 'Authorization': 'Bearer ' + adminToken }
-    });
-    var data = await res.json();
-    if (data.ok) {
-      showToast(data.message, 'success');
-      loadUsers();
-      loadDashboard();
+    var res = await apiRequest('/admin/users?id=' + deleteUserId, 'DELETE');
+    if (res && res.ok) {
+      showToast(res.message || '删除成功', 'success');
+      loadUsers(); loadDashboard();
     } else {
-      showToast(data.error || '删除失败', 'error');
+      showToast(res ? (res.error || '删除失败') : 'API 不可用', 'error');
     }
-  } catch(e) {
-    showToast('网络连接失败', 'error');
-  }
+  } catch(e) { showToast('操作失败', 'error'); }
   deleteUserId = null;
 }
 
@@ -651,74 +884,148 @@ function showClearAllModal() {
 async function confirmClearAll() {
   closeModal('clearAllModal');
   try {
-    var res = await fetch(API_BASE + '/admin/clear-all', {
-      method: 'DELETE',
-      headers: { 'Authorization': 'Bearer ' + adminToken }
-    });
-    var data = await res.json();
-    if (data.ok) {
-      showToast(data.message, 'success');
-      loadUsers();
-      loadDashboard();
+    var res = await apiRequest('/admin/clear-all', 'DELETE');
+    if (res && res.ok) {
+      showToast(res.message || '清空成功', 'success');
+      loadUsers(); loadDashboard();
     } else {
-      showToast(data.error || '清空失败', 'error');
+      showToast(res ? (res.error || '清空失败') : 'API 不可用', 'error');
+    }
+  } catch(e) { showToast('操作失败', 'error'); }
+}
+
+// ═══════════════════════════════════════════
+// 安全设置
+// ═══════════════════════════════════════════
+async function refreshSettingsInfo() {
+  var cfg = getStoredConfig();
+
+  // 显示恢复密钥
+  if (cfg && cfg.recoveryKey) {
+    document.getElementById('recoveryKeyDisplay').textContent = cfg.recoveryKey;
+  }
+
+  // 密码修改时间
+  if (cfg && cfg.changedAt) {
+    document.getElementById('pwdChangeTime').textContent = formatDate(new Date(cfg.changedAt).toISOString());
+  } else {
+    document.getElementById('pwdChangeTime').textContent = '尚未修改过（使用默认密码）';
+  }
+}
+
+async function changePassword() {
+  var curPwd = document.getElementById('curPwd').value;
+  var newPwd = document.getElementById('newPwd').value;
+  var confirmPwd = document.getElementById('confirmPwd').value;
+
+  if (!curPwd) { showToast('请输入当前密码', 'error'); return; }
+  if (!newPwd || newPwd.length < 6) { showToast('新密码至少6位', 'error'); return; }
+  if (newPwd !== confirmPwd) { showToast('两次输入的新密码不一致', 'error'); return; }
+
+  var cfg = getStoredConfig();
+  if (!cfg) { showToast('系统异常', 'error'); return; }
+
+  // 验证当前密码
+  var curHash = await sha256(curPwd);
+  if (curHash !== cfg.pwdHash) { showToast('当前密码不正确', 'error'); return; }
+
+  // 更新密码
+  var newHash = await sha256(newPwd);
+  cfg.pwdHash = newHash;
+  cfg.recoveryKey = generateRecoveryKey(newHash);
+  cfg.changedAt = Date.now();
+  saveConfig(cfg);
+
+  // 清空表单
+  document.getElementById('curPwd').value = '';
+  document.getElementById('newPwd').value = '';
+  document.getElementById('confirmPwd').value = '';
+
+  // 刷新显示
+  refreshSettingsInfo();
+
+  showToast('密码修改成功！新的恢复密钥已生成，请妥善保存。', 'success');
+}
+
+async function verifyAndReset() {
+  var key = document.getElementById('resetKeyInput').value.trim();
+  if (!key) { showToast('请输入恢复密钥', 'error'); return; }
+
+  var cfg = getStoredConfig();
+  if (!cfg) { showToast('系统异常', 'error'); return; }
+
+  if (key !== cfg.recoveryKey) {
+    showToast('恢复密钥不正确，无法重置', 'error');
+    return;
+  }
+
+  // 弹出设置新密码
+  var newPwd = prompt('恢复密钥验证通过！\n\n请输入新的管理员密码（至少6位）：');
+  if (!newPwd || newPwd.length < 6) { showToast('密码至少6位，取消重置', 'info'); return; }
+
+  var confirmP = prompt('请再次输入新密码：');
+  if (newPwd !== confirmP) { showToast('两次密码不一致，取消重置', 'info'); return; }
+
+  var newHash = await sha256(newPwd);
+  cfg.pwdHash = newHash;
+  cfg.recoveryKey = generateRecoveryKey(newHash);
+  cfg.changedAt = Date.now();
+  saveConfig(cfg);
+
+  document.getElementById('resetKeyInput').value = '';
+  refreshSettingsInfo();
+  showToast('密码已通过恢复密钥重置成功！', 'success');
+}
+
+// ═══ API 状态检测 ═══
+async function checkApiStatus() {
+  var el = document.getElementById('apiStatus');
+  try {
+    var controller = new AbortController();
+    var timer = setTimeout(function() { controller.abort(); }, 5000);
+    var res = await fetch('/api/admin/stats', { signal: controller.signal });
+    clearTimeout(timer);
+    if (res.ok || res.status === 401) {
+      el.className = 'status-badge ok';
+      el.innerHTML = '<span class="status-dot green"></span> 已连接';
+    } else {
+      el.className = 'status-badge err';
+      el.innerHTML = '<span class="status-dot red"></span> 异常 (' + res.status + ')';
     }
   } catch(e) {
-    showToast('网络连接失败', 'error');
+    el.className = 'status-badge err';
+    el.innerHTML = '<span class="status-dot red"></span> 未连接（Worker 待部署）';
+  }
+}
+
+// ═══ API 请求封装 ═══
+async function apiRequest(path, method) {
+  method = method || 'GET';
+  try {
+    var opts = { method: method };
+    if (method !== 'GET') opts.headers = { 'Content-Type': 'application/json' };
+
+    var res = await fetch(path, opts);
+    return await res.json();
+  } catch(e) {
+    return null;
   }
 }
 
 function closeModal(id) {
   document.getElementById(id).classList.remove('active');
 }
-
-// ═══════════════════════════════════════════
-// 退出
-// ═══════════════════════════════════════════
-function doAdminLogout() {
-  localStorage.removeItem('qingyin_admin_token');
-  adminToken = null;
-  document.getElementById('appLayout').style.display = 'none';
-  document.getElementById('loginPage').style.display = 'flex';
-  document.getElementById('adminPwd').value = '';
-  document.getElementById('loginError').style.display = 'none';
-}
-
-function handleAuthExpired() {
-  showToast('登录已过期，请重新登录', 'error');
-  setTimeout(doAdminLogout, 1500);
-}
-
-// ═══════════════════════════════════════════
-// 工具函数
-// ═══════════════════════════════════════════
-function showToast(msg, type) {
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast ' + (type || 'info') + ' show';
-  clearTimeout(t._timer);
-  t._timer = setTimeout(function() { t.classList.remove('show'); }, 3000);
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return '-';
-  try {
-    var d = new Date(dateStr.replace(' ', 'T') + (dateStr.includes('Z') ? '' : 'Z'));
-    if (isNaN(d.getTime())) return dateStr;
-    return d.getFullYear() + '-' +
-      String(d.getMonth() + 1).padStart(2, '0') + '-' +
-      String(d.getDate()).padStart(2, '0') + ' ' +
-      String(d.getHours()).padStart(2, '0') + ':' +
-      String(d.getMinutes()).padStart(2, '0');
-  } catch(e) { return dateStr; }
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  var div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
 </script>
+
+<style>
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%,60% { transform: translateX(-8px); }
+  40%,80% { transform: translateX(8px); }
+}
+.login-card[style*="animation: none"] + * { animation: none; }
+.login-card { animation: none; }
+.login-card.shake { animation: shake .4s ease; }
+</style>
 </body>
 </html>
