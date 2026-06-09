@@ -22,13 +22,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 .login-card h1{font-size:26px;font-weight:700;text-align:center;color:var(--text);margin-bottom:6px;}
 .login-card .subtitle{text-align:center;color:var(--text-muted);font-size:13px;margin-bottom:28px;}
 .login-card label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;}
-.login-card input{width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:15px;outline:none;transition:border-color .2s;background:#FAFBFC;display:block;box-sizing:border-box;}
+.login-card input{width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:15px;outline:none;transition:border-color .2s;background:#FAFBFC;}
 .login-card input:focus{border-color:var(--primary);background:#fff;}
 
-/* 管理员密码框（含眼睛按钮） */
-.admin-pwd-wrap{position:relative;display:block;width:100%;}
-.admin-pwd-wrap input{width:100%;padding-right:46px!important;box-sizing:border-box!important;}
-.admin-pwd-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:6px 4px;display:flex;align-items:center;justify-content:center;z-index:5;outline:none;}
+/* 管理员密码框（含眼睛按钮）— 与主应用 .pwd-wrap 保持一致 */
+.admin-pwd-wrap{position:relative;}
+.admin-pwd-wrap input{padding-right:46px !important;}
+.admin-pwd-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:6px;display:flex;align-items:center;justify-content:center;outline:none;}
 .admin-pwd-eye:hover svg{stroke:var(--primary)!important;}
 .login-card button{width:100%;padding:13px;background:var(--primary);color:#fff;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:600;cursor:pointer;margin-top:18px;transition:background .2s;}
 .login-card button:hover{background:var(--primary-dark);}
@@ -679,21 +679,33 @@ document.addEventListener('DOMContentLoaded', async function(){
 
 async function doAdminLogin() {
   var pwd = document.getElementById('adminPwd').value;
-  var btn = document.getElementById('btnAdminLogin'); var errEl = document.getElementById('loginError');
+  var btn = document.getElementById('btnAdminLogin'); 
+  var errEl = document.getElementById('loginError');
   if (!pwd) { showLoginError('请输入管理员密码'); shakeCard(); return; }
-  btn.disabled = true; btn.textContent = '验证中...'; errEl.style.display = 'none'; await sleep(300);
-
+  
+  // 立即更新 UI 防止重复点击
+  btn.disabled = true; 
+  btn.textContent = '验证中...'; 
+  errEl.style.display = 'none';
+  
   try {
-    // 添加 10 秒超时
+    // 15 秒超时
     var ctrl = new AbortController();
-    var timer = setTimeout(function() { ctrl.abort(); }, 10000);
+    var timer = setTimeout(function() { ctrl.abort(); }, 15000);
+    
+    console.log('[Admin Login] Sending to:', WORKER_API+'/api/admin/login');
     var res = await fetch(WORKER_API+'/api/admin/login', {
-      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({password:pwd}),
+      method:'POST', 
+      headers:{'Content-Type':'application/json'}, 
+      body:JSON.stringify({password:pwd}),
       signal: ctrl.signal
     });
     clearTimeout(timer);
-    if (!res.ok) { throw new Error('HTTP '+res.status); }
+    console.log('[Admin Login] Response status:', res.status);
+    
     var data = await res.json();
+    console.log('[Admin Login] Response data:', JSON.stringify(data));
+    
     if (data && data.ok) {
       adminToken = data.token;
       sessionStorage.setItem('qingyin_admin_session', adminToken);
@@ -701,27 +713,34 @@ async function doAdminLogin() {
       showToast(data.message || '登录成功', 'success');
       showApp();
     } else {
-      showLoginError(data ? (data.error || '密码错误') : 'API 返回异常');
+      showLoginError(data ? (data.error || '密码错误') : '服务器返回异常');
       shakeCard();
     }
   } catch(e) {
-    console.error('[Admin Login] API error:', e.message);
-    // 离线降级：本地密码校验
+    console.error('[Admin Login] Error:', e.message, e);
+    // 离线降级：本地密码校验（注意：使用与 Worker 相同的盐值）
     try {
       var cfg = await getOrCreateConfig();
-      if (await sha256(pwd) === cfg.pwdHash) {
+      // 尝试纯 sha256（旧版兼容）
+      var plainHash = await sha256(pwd);
+      if (plainHash === cfg.pwdHash) {
         adminToken = genSessionToken();
         sessionStorage.setItem('qingyin_admin_session', adminToken);
         document.getElementById('adminPwd').value = '';
         showApp();
         showToast('已离线登录（功能受限，建议部署 Worker API）','warning');
       } else {
-        showLoginError('密码错误或网络异常（'+e.message+'）'); shakeCard();
+        showLoginError('密码错误或网络异常（'+e.message+'）'); 
+        shakeCard();
       }
     } catch(innerErr) {
-      showLoginError('系统异常：'+innerErr.message); shakeCard();
+      showLoginError('系统异常：'+innerErr.message); 
+      shakeCard();
     }
-  } finally { btn.disabled=false; btn.textContent='登录后台'; }
+  } finally { 
+    btn.disabled=false; 
+    btn.textContent='登录后台'; 
+  }
 }
 
 function showLoginError(msg) { var el=document.getElementById('loginError');el.textContent=msg;el.style.display='block'; }
