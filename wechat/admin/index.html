@@ -677,9 +677,37 @@ function sleep(ms) { return new Promise(function(r){ setTimeout(r,ms); }); }
 function genSessionToken() { var a = new Uint8Array(24); crypto.getRandomValues(a); return Array.from(a).map(b=>b.toString(16).padStart(2,'0')).join(''); }
 
 // ═══ 页面初始化 & 登录 ═══
-document.addEventListener('DOMContentLoaded', async function(){
+document.addEventListener('DOMContentLoaded', function(){
+  // 绑定按钮事件（比 inline onclick 更可靠）
+  var btnLogin = document.getElementById('btnAdminLogin');
+  var btnEye = document.querySelector('.admin-pwd-eye');
+  var inputPwd = document.getElementById('adminPwd');
+
+  if (btnLogin) btnLogin.addEventListener('click', function(e){
+    e.preventDefault();
+    console.log('[Admin] Login button clicked');
+    doAdminLogin();
+  });
+  if (btnEye) btnEye.addEventListener('click', function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('[Admin] Eye button clicked');
+    toggleAdminPwd(e);
+  });
+  if (inputPwd) inputPwd.addEventListener('keydown', function(e){
+    if (e.key === 'Enter') { e.preventDefault(); doAdminLogin(); }
+  });
+
+  // 检查已有 session
   var st = sessionStorage.getItem('qingyin_admin_session');
-  if (st) { adminToken = st; showApp(); return; }
+  if (st) {
+    console.log('[Admin] Found session, showing app...');
+    adminToken = st;
+    showApp();
+    return;
+  }
+
+  console.log('[Admin] Page ready, waiting for login...');
 });
 
 async function doAdminLogin() {
@@ -791,8 +819,11 @@ async function doRecoveryLogin() {
 }
 
 function showApp() {
-  document.getElementById('loginPage').style.display='none';
-  document.getElementById('appLayout').style.display='flex';
+  var lp = document.getElementById('loginPage');
+  var al = document.getElementById('appLayout');
+  if (lp) lp.style.setProperty('display', 'none', 'important');
+  if (al) al.style.setProperty('display', 'flex', 'important');
+  console.log('[Admin] Switched to app layout');
   loadDashboard(); checkApiStatus();
 }
 function doAdminLogout() { sessionStorage.removeItem('qingyin_admin_session');adminToken=null;
