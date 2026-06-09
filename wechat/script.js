@@ -29,20 +29,20 @@ function checkLogin() {
 }
 
 function showLogin() {
-  $('loginOverlay').style.display = 'flex';
-  $('appContent').style.display = 'none';
+  $('loginOverlay').style.setProperty('display', 'flex', 'important');
+  $('appContent').style.setProperty('display', 'none', 'important');
   var bottomNav = document.querySelector('.bottom-nav');
-  if (bottomNav) bottomNav.style.display = 'none';
-  $('fabBtn').style.display = 'none';
+  if (bottomNav) bottomNav.style.setProperty('display', 'none', 'important');
+  $('fabBtn').style.setProperty('display', 'none', 'important');
   switchLoginView('login');
 }
 
 function hideLogin() {
-  $('loginOverlay').style.display = 'none';
-  $('appContent').style.display = 'block';
+  $('loginOverlay').style.setProperty('display', 'none', 'important');
+  $('appContent').style.setProperty('display', 'block', 'important');
   var bottomNav = document.querySelector('.bottom-nav');
-  if (bottomNav) bottomNav.style.display = 'flex';
-  $('fabBtn').style.display = 'flex';
+  if (bottomNav) bottomNav.style.setProperty('display', 'flex', 'important');
+  $('fabBtn').style.setProperty('display', 'flex', 'important');
 }
 
 // 带超时的 API 调用
@@ -101,9 +101,6 @@ async function doLogin() {
         saveData(appData);
       }
       hideLogin();
-      $('appContent').style.display = 'block';
-      document.querySelector('.bottom-nav').style.display = 'flex';
-      $('fabBtn').style.display = 'flex';
       initApp();
       showToast('登录成功', 'success');
     } else {
@@ -158,9 +155,6 @@ async function doRegister() {
         saveData(appData);
       }
       hideLogin();
-      $('appContent').style.display = 'block';
-      document.querySelector('.bottom-nav').style.display = 'flex';
-      $('fabBtn').style.display = 'flex';
       initApp();
       showToast('注册成功！欢迎加入轻印', 'success');
     } else {
