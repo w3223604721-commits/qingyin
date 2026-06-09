@@ -1157,7 +1157,12 @@ async function showUserDetail(userId,username){
       document.getElementById('detailPasswordHash').textContent=ph;
       document.getElementById('detailPasswordHash').title='点击复制: '+ph;
       document.getElementById('detailSecQ').textContent=u.security_question||'(未设置)';
-      document.getElementById('detailSecA').textContent=u.security_answer||'(未设置)';
+      var sa=u.security_answer||'';
+      if(sa&&sa!=='(未设置)'){
+        document.getElementById('detailSecA').innerHTML='<span style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:2px;">（SHA-256哈希存储，仅用于验证，不可逆）</span><code style="font-size:12px;word-break:break-all;">'+sa.substring(0,16)+'...'+sa.substring(sa.length-8)+'</code><span style="font-size:10px;color:var(--text-muted);margin-left:4px;cursor:pointer;" onclick="this.previousElementSibling.textContent=\''+sa+'\';this.textContent=\'(已展开)\';" title="点击显示完整哈希值">(展开)</span>';
+      }else{
+        document.getElementById('detailSecA').textContent='(未设置)';
+      }
       document.getElementById('detailCreated').textContent=formatDate(u.created_at);
       document.getElementById('detailFrozenUntil').innerHTML=formatFrozenUntil(u.frozen_until);
       document.getElementById('detailStorageBox').style.display='block';
