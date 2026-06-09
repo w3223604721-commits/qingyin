@@ -1291,21 +1291,22 @@ body {
   font-size:14px; color:#AAA; letter-spacing:2px; margin-top:10px;
 }
 .login-form {
-  display:flex; flex-direction:column; gap:20px!important;
+  display:flex; flex-direction:column; gap:26px!important;
 }
 /* 注册表单额外间距 */
-#registerFormView { gap:24px!important; }
+#registerFormView { gap:28px!important; }
 #registerFormView input[type="text"],
-#registerFormView input[type="tel"],
 #registerFormView select,
 #registerFormView .pwd-wrap {
-  margin-bottom:4px;
+  margin-bottom:2px;
 }
 /* 登录表单确保间距 */
-#loginFormView { gap:20px!important; }
+#loginFormView { gap:24px!important; }
 #loginFormView .pwd-wrap {
-  margin-bottom:4px;
+  margin-bottom:2px;
 }
+/* 忘记密码表单确保间距 */
+#forgotPwdView { gap:24px!important; }
 .login-form input[type="text"],
 .login-form input[type="password"],
 .login-form input[type="tel"] {

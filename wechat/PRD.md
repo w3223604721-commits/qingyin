@@ -343,19 +343,31 @@
 
 #### 🆕 新增功能
 
-- [x] **Cloudflare D1 数据库**：新建 `qingyin-db`，创建 Users 表（id, username, phone, password_hash, nickname, avatar_url, created_at, updated_at）
-- [x] **Cloudflare Workers API 后端**：部署 `qingyin-api` Worker，提供 4 个 RESTful 接口
-- [x] **用户注册**：支持用户名 + 手机号（可选）+ 密码注册，密码 SHA-256 哈希存储
-- [x] **用户登录**：账号密码登录，返回 JWT-like token（7天有效期）
+- [x] **Cloudflare D1 数据库**：新建 `qingyin-db`，创建 Users 表（id, username, password_hash, nickname, avatar_url, security_question, security_answer, created_at, updated_at）
+- [x] **Cloudflare Workers API 后端**：部署 `qingyin-api` Worker，提供 6 个 RESTful 接口（注册/登录/鉴权/忘记密码查询/重置密码/探索数据）
+- [x] **用户注册**：支持用户名 + 密码注册，密码 SHA-256 哈希存储
+- [x] **用户登录**：账号密码登录，返回 JWT-like token（7天有效期），错误时统一提示"账号或密码错误"
 - [x] **Token 鉴权**：`/api/me` 接口验证 token 并返回用户信息
-- [x] **登录页面集成到主产品**：`wechat/index.html` 内置登录/注册覆盖层，进入即检查 token
-- [x] **协议页面内置**：用户协议和隐私声明内嵌在应用中，无需跳转
+- [x] **密保系统**：注册时必选密保问题（8个预设选项）+ 答案，答案加密存储
+- [x] **忘记密码**：输入用户名 → 系统返回注册时的密保问题 → 回答密保 → 验证通过后设置新密码（旧密码清除）→ 返回登录
+- [x] **协议页面内置**：用户协议和隐私声明内嵌在应用中，z-index 10000，高于登录层
+- [x] **登录覆盖层 fixed 定位**：三重保险（HTML 内联 style + CSS !important + JS style.setProperty）
 
 #### 🎨 UI 改版
 
-- [x] **登录页面**：Indigo 品牌色（#6366F1），Logo + 表单 + 协议勾选，无缝切换登录/注册
+- [x] **登录页面**：Indigo 品牌色（#6366F1），Logo + 表单 + 协议勾选，无缝切换登录/注册/忘记密码
 - [x] **密码显示切换**：眼睛图标切换明文/密文显示
 - [x] **注册表单验证**：用户名5-24位仅字母数字下划线，密码至少6位
+- [x] **表单间距统一**：登录表单 gap 24px，注册表单 gap 28px，忘记密码表单 gap 24px
+
+#### 🐛 修复的 Bug
+
+- [x] **switchLoginView 破坏 flex 布局**：`display:block` 覆盖 CSS `display:flex` 导致表单 gap 间距消失 → 改为 `display:''` 移除内联覆盖，让 CSS flex 生效
+- [x] **从注册/忘记密码切回登录后间距消失**：所有视图切换统一使用 `display:''` 释放 flex 布局
+- [x] **注册页面删除手机号字段**：HTML/JS/Worker 三端同步移除 phone 参数
+- [x] **协议覆盖层 z-index 不足**：协议层 z-index 提升至 10000，高于登录层的 99999
+- [x] **忘记密码"账号不存在"提示**：Worker 返回明确的"账号不存在"，前端红色高亮显示
+- [x] **密保答案错误处理**：前端提示"密保答案错误，请重新输入"并清空输入框
 
 #### 🔧 部署架构变更
 
@@ -365,25 +377,25 @@
 | 登录方式 | CloudBase 匿名登录 | Cloudflare Workers JWT Token |
 | Vercel 部署 | `npm run build` (Vue) | 静态文件直出 |
 | .gitignore | wechat/ 被忽略 | wechat/ 已纳入版本管理 |
+| 注册字段 | 用户名 + 手机号 + 密码 | 用户名 + 密码 + 密保问题 |
+| API 接口数 | 4 个 | 6 个（新增忘记密码/重置密码） |
 
 #### 🔗 部署信息（更新）
 
 - [x] **Vercel 前端部署**：`https://20260603112143.vercel.app`（自动部署，已切换为静态文件）
 - [x] **CloudBase 镜像部署**：`https://ai-native-d5gv1bzqle900971e-1439954016.tcloudbaseapp.com/`
 - [x] **Worker 后端地址**：`https://qingyin-api.w3223604721.workers.dev`
-- [x] **D1 数据库**：`qingyin-db`（Asia Pacific 区域，Users 表已创建并索引）
+- [x] **D1 数据库**：`qingyin-db`（Asia Pacific 区域，Users 表已创建并索引，含 security_question/security_answer 列）
 
 #### 📁 修改文件（2026-06-09）
 
 | 文件路径 | 变更类型 | 说明 |
 |----------|----------|------|
-| `wechat/index.html` | 修改 | 添加登录/注册覆盖层 + 协议页面 HTML |
-| `wechat/script.js` | 修改 | 添加 Cloudflare Workers 登录 API 调用逻辑 |
-| `wechat/styles.css` | 修改 | 添加登录页面样式（Indigo 品牌色） |
-| `wechat/.git` | 删除 | 移除内嵌 git 仓库（已纳入主项目版本管理） |
-| `.gitignore` | 修改 | 移除 `wechat/` 排除项 |
-| `vercel.json` | 重写 | 从 Vue build 改为 `wechat/` 静态文件直出 |
-| `README.md` | 重写 | 更新部署架构说明，标注 Vercel 为主平台 |
+| `wechat/index.html` | 修改 | 删除手机号输入框、优化忘记密码视图 HTML、CSS 版本号 v7 |
+| `wechat/script.js` | 修改 | 修复 switchLoginView flex 布局 bug、doRegister 移除 phone、doLogin 统一错误提示、优化忘记密码流程 |
+| `wechat/styles.css` | 修改 | 统一表单 gap 间距、login-overlay !important、协议 z-index 10000 |
+| `worker/index.js` | 修改 | 注册移除 phone 参数、忘记密码改为"账号不存在"、新增密保列自动迁移 |
+| `wechat/PRD.md` | 更新 | 记录 v2.1 完整变更日志 |
 
 ---
 

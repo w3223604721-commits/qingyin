@@ -128,7 +128,7 @@ function verifyToken(token) {
 // ──────────────────────────────────────────────
 
 async function handleRegister(request, env, corsHeaders) {
-  const { username, phone, password, securityQuestion, securityAnswer } = await request.json();
+  const { username, password, securityQuestion, securityAnswer } = await request.json();
 
   if (!username || !password) {
     return json({ error: '用户名和密码不能为空' }, 400, corsHeaders);
@@ -160,8 +160,8 @@ async function handleRegister(request, env, corsHeaders) {
   await ensureSecurityColumns(env, username);
 
   await env.DB.prepare(
-    'INSERT INTO Users (username, phone, password_hash, nickname, security_question, security_answer) VALUES (?, ?, ?, ?, ?, ?)'
-  ).bind(username, phone || null, passwordHash, username, securityQuestion, answerHash).run();
+    'INSERT INTO Users (username, password_hash, nickname, security_question, security_answer) VALUES (?, ?, ?, ?, ?)'
+  ).bind(username, passwordHash, username, securityQuestion, answerHash).run();
 
   // 获取新用户
   const user = await env.DB.prepare('SELECT id, username, nickname, avatar_url, created_at FROM Users WHERE username = ?').bind(username).first();
@@ -246,7 +246,7 @@ async function handleForgotPassword(request, env, corsHeaders) {
   ).bind(username).first();
 
   if (!user) {
-    return json({ error: '该用户名不存在' }, 404, corsHeaders);
+    return json({ error: '账号不存在' }, 404, corsHeaders);
   }
   if (!user.security_question) {
     return json({ error: '该账号未设置密保，无法找回密码' }, 400, corsHeaders);

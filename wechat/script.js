@@ -26,16 +26,16 @@ function checkLogin() {
 }
 
 function showLogin() {
-  var lo = $('loginOverlay');
-  lo.style.setProperty('display', 'flex', 'important');
+  $('loginOverlay').style.display = 'flex';
   $('appContent').style.display = 'none';
   document.querySelector('.bottom-nav').style.display = 'none';
   $('fabBtn').style.display = 'none';
+  // 默认显示登录表单
+  switchLoginView('login');
 }
 
 function hideLogin() {
-  var lo = $('loginOverlay');
-  lo.style.setProperty('display', 'none', 'important');
+  $('loginOverlay').style.display = 'none';
   $('appContent').style.display = 'block';
   document.querySelector('.bottom-nav').style.display = 'flex';
   $('fabBtn').style.display = 'flex';
@@ -72,7 +72,7 @@ async function doLogin() {
       initApp();
       showToast('登录成功', 'success');
     } else {
-      showLoginError(data.error || '用户名或密码错误');
+      showLoginError('账号或密码错误');
     }
   } catch(e) { showLoginError('网络连接失败，请稍后重试'); }
   finally { $('btnLoginSubmit').disabled = false; $('btnLoginSubmit').textContent = '登录'; }
@@ -80,7 +80,6 @@ async function doLogin() {
 
 async function doRegister() {
   const username = $('regUsername').value.trim();
-  const phone = $('regPhone').value.trim();
   const securityQuestion = $('regSecurityQ').value;
   const securityAnswer = $('regSecurityA').value.trim();
   const password = $('regPassword').value;
@@ -94,7 +93,7 @@ async function doRegister() {
   $('btnRegSubmit').disabled = true;
   $('btnRegSubmit').textContent = '注册中...';
   try {
-    const data = await apiCall('/api/register', { username, password, phone: phone || null, securityQuestion, securityAnswer });
+    const data = await apiCall('/api/register', { username, password, securityQuestion, securityAnswer });
     if (data.ok) {
       setToken(data.token);
       localStorage.setItem('qingyin_user', JSON.stringify(data.user));
@@ -117,10 +116,13 @@ function showForgotPassword() {
   switchLoginView('forgot');
   // 重置忘记密码表单
   $('fpUsername').value = '';
+  $('fpUsername').disabled = false;
   $('fpAnswer').value = '';
   $('fpNewPwd').value = '';
   $('fpStep2').style.display = 'none';
   $('forgotPwdError').style.display = 'none';
+  $('btnFpQuery').disabled = false;
+  $('btnFpQuery').textContent = '查询密保问题';
 }
 
 async function doQuerySecurity() {
@@ -129,22 +131,28 @@ async function doQuerySecurity() {
     showFpError('请输入用户名');
     return;
   }
+  hideFpMsg();
   $('btnFpQuery').disabled = true;
   $('btnFpQuery').textContent = '查询中...';
   try {
     const data = await apiCall('/api/forgot-password', { username });
     if (data.ok) {
-      $('fpQuestionText').textContent = '密保问题：' + data.securityQuestion;
+      // 账号存在，显示密保问题
+      $('fpQuestionText').innerHTML = '您的密保问题：<strong>' + data.securityQuestion + '</strong>';
       $('fpStep2').style.display = 'block';
-      $('btnFpQuery').textContent = '已确认';
+      $('btnFpQuery').textContent = '已确认账号';
       $('btnFpQuery').disabled = true;
       $('fpUsername').disabled = true;
       $('forgotPwdError').style.display = 'none';
+      // 自动聚焦密保答案输入框
+      setTimeout(function() { $('fpAnswer').focus(); }, 200);
+    } else if (data.error === '账号不存在') {
+      showFpError('账号不存在');
     } else {
       showFpError(data.error || '查询失败');
     }
   } catch(e) { showFpError('网络连接失败，请稍后重试'); }
-  finally { if (!$('btnFpQuery').disabled) { $('btnFpQuery').disabled = false; $('btnFpQuery').textContent = '查询密保问题'; } }
+  finally { if (!$('btnFpQuery').disabled || $('fpUsername').disabled) { /* query button stays disabled */ } else { $('btnFpQuery').disabled = false; $('btnFpQuery').textContent = '查询密保问题'; } }
 }
 
 async function doResetPassword() {
@@ -153,20 +161,29 @@ async function doResetPassword() {
   const newPwd = $('fpNewPwd').value;
   if (!answer) { showFpError('请输入密保答案'); return; }
   if (!newPwd || newPwd.length < 6) { showFpError('新密码至少需要6位'); return; }
-  $('forgotPwdError').style.display = 'none';
+  hideFpMsg();
   try {
     const data = await apiCall('/api/reset-password', { username, securityAnswer: answer, newPassword: newPwd });
     if (data.ok) {
-      showFpSuccess(data.message || '密码重置成功');
-      // 1.5秒后返回登录
+      showFpSuccess(data.message || '密码重置成功，请返回登录');
+      // 2秒后自动返回登录
       setTimeout(function() {
         $('fpUsername').value = '';
         $('fpUsername').disabled = false;
         $('fpStep2').style.display = 'none';
+        $('fpAnswer').value = '';
+        $('fpNewPwd').value = '';
+        $('btnFpQuery').disabled = false;
+        $('btnFpQuery').textContent = '查询密保问题';
+        hideFpMsg();
         switchLoginView('login');
-      }, 1500);
+      }, 2000);
+    } else if (data.error === '密保答案错误') {
+      showFpError('密保答案错误，请重新输入');
+      $('fpAnswer').value = '';
+      $('fpAnswer').focus();
     } else {
-      showFpError(data.error || '重置失败');
+      showFpError(data.error || '重置失败，请稍后重试');
     }
   } catch(e) { showFpError('网络连接失败，请稍后重试'); }
 }
@@ -213,9 +230,21 @@ function hideLoginError() {
 function switchLoginView(view) {
   hideLoginError();
   hideFpMsg();
-  $('loginFormView').style.display = (view === 'login') ? 'block' : 'none';
-  $('registerFormView').style.display = (view === 'register') ? 'block' : 'none';
-  $('forgotPwdView').style.display = (view === 'forgot') ? 'block' : 'none';
+  // 关键修复：login-form 的 CSS 是 display:flex!important，必须用 '' 移除内联 style 覆盖
+  // 而不是设置 display:block（会破坏 flex 布局和 gap 间距）
+  if (view === 'login') {
+    $('loginFormView').style.display = '';
+    $('registerFormView').style.display = 'none';
+    $('forgotPwdView').style.display = 'none';
+  } else if (view === 'register') {
+    $('loginFormView').style.display = 'none';
+    $('registerFormView').style.display = '';
+    $('forgotPwdView').style.display = 'none';
+  } else if (view === 'forgot') {
+    $('loginFormView').style.display = 'none';
+    $('registerFormView').style.display = 'none';
+    $('forgotPwdView').style.display = '';
+  }
 }
 
 function hideFpMsg() {

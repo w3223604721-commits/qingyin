@@ -902,7 +902,6 @@
       <!-- 注册表单 -->
       <div class="login-form" id="registerFormView" style="display:none;">
         <input type="text" id="regUsername" placeholder="请设置用户名（5-24位字母/数字/下划线）" autocomplete="off" maxlength="24">
-        <input type="tel" id="regPhone" placeholder="手机号（选填）" autocomplete="off" maxlength="11">
         <select id="regSecurityQ" class="login-select">
           <option value="">-- 请选择密保问题（必填） --</option>
           <option value="你的真实姓名是什么？">你的真实姓名是什么？</option>
@@ -932,19 +931,19 @@
 
       <!-- 忘记密码表单 -->
       <div class="login-form" id="forgotPwdView" style="display:none;">
-        <p class="forgot-tip">请输入用户名，我们将查询您的密保问题</p>
+        <p class="forgot-tip">输入注册时的用户名，通过密保问题找回密码</p>
         <input type="text" id="fpUsername" placeholder="请输入用户名" autocomplete="off" maxlength="24">
-        <button class="btn-login-submit" id="btnFpQuery" onclick="doQuerySecurity()">查询密保问题</button>
+        <button class="btn-login-submit" id="btnFpQuery" onclick="doQuerySecurity()">查询账号</button>
         <div id="fpStep2" style="display:none;">
           <p class="forgot-tip" id="fpQuestionText"></p>
-          <input type="text" id="fpAnswer" placeholder="请输入密保答案" autocomplete="off" maxlength="50">
+          <input type="text" id="fpAnswer" placeholder="请回答密保问题" autocomplete="off" maxlength="50">
           <div class="pwd-wrap">
             <input type="password" id="fpNewPwd" placeholder="请设置新密码（至少6位）" autocomplete="new-password" maxlength="32">
             <button class="toggle-pwd-btn" onclick="toggleFpPwd()" tabindex="-1">
               <svg id="fpPwdIcon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#999" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
           </div>
-          <button class="btn-login-submit" onclick="doResetPassword()">重置密码</button>
+          <button class="btn-login-submit" onclick="doResetPassword()">确认重置密码</button>
         </div>
         <div class="login-links">
           <span></span>
