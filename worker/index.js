@@ -148,7 +148,7 @@ async function handleRegister(request, env, corsHeaders) {
   // 获取新用户
   const user = await env.DB.prepare('SELECT id, username, nickname, avatar_url, created_at FROM Users WHERE username = ?').bind(username).first();
   
-  const token = generateToken(user);
+  const token = await generateToken(user);
 
   return json({ ok: true, token, user }, 201, corsHeaders);
 }
@@ -182,7 +182,7 @@ async function handleLogin(request, env, corsHeaders) {
     nickname: user.nickname || user.username,
     avatar_url: user.avatar_url || '',
   };
-  const token = generateToken(safeUser);
+  const token = await generateToken(safeUser);
 
   return json({ ok: true, token, user: safeUser }, 200, corsHeaders);
 }
