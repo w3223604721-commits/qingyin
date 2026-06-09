@@ -122,7 +122,7 @@ function showForgotPassword() {
   $('fpStep2').style.display = 'none';
   $('forgotPwdError').style.display = 'none';
   $('btnFpQuery').disabled = false;
-  $('btnFpQuery').textContent = '查询密保问题';
+  $('btnFpQuery').textContent = '查询账号是否存在';
 }
 
 async function doQuerySecurity() {
@@ -152,7 +152,7 @@ async function doQuerySecurity() {
       showFpError(data.error || '查询失败');
     }
   } catch(e) { showFpError('网络连接失败，请稍后重试'); }
-  finally { if (!$('btnFpQuery').disabled || $('fpUsername').disabled) { /* query button stays disabled */ } else { $('btnFpQuery').disabled = false; $('btnFpQuery').textContent = '查询密保问题'; } }
+  finally { if (!$('btnFpQuery').disabled || $('fpUsername').disabled) { /* query button stays disabled */ } else { $('btnFpQuery').disabled = false;     $('btnFpQuery').textContent = '查询账号是否存在'; } }
 }
 
 async function doResetPassword() {
@@ -174,7 +174,7 @@ async function doResetPassword() {
         $('fpAnswer').value = '';
         $('fpNewPwd').value = '';
         $('btnFpQuery').disabled = false;
-        $('btnFpQuery').textContent = '查询密保问题';
+        $('btnFpQuery').textContent = '查询账号是否存在';
         hideFpMsg();
         switchLoginView('login');
       }, 2000);

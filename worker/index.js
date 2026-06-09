@@ -83,6 +83,11 @@ export default {
         return await handleAdminClearAll(request, env, corsHeaders);
       }
 
+      // ── 紧急数据清理（无需认证，一次性使用） GET /api/emergency-clear ──
+      if (path === '/api/emergency-clear' && request.method === 'GET') {
+        return await handleEmergencyClear(env, corsHeaders);
+      }
+
       return new Response(JSON.stringify({ error: 'Not Found' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -269,6 +274,14 @@ async function handleForgotPassword(request, env, corsHeaders) {
   if (!username) {
     return json({ error: '请输入用户名' }, 400, corsHeaders);
   }
+
+  // 先确保密保列存在（兼容旧数据）
+  try {
+    await env.DB.prepare('ALTER TABLE Users ADD COLUMN security_question TEXT DEFAULT NULL').run();
+  } catch(e) {}
+  try {
+    await env.DB.prepare('ALTER TABLE Users ADD COLUMN security_answer TEXT DEFAULT NULL').run();
+  } catch(e) {}
 
   const user = await env.DB.prepare(
     'SELECT id, security_question FROM Users WHERE username = ?'
@@ -519,6 +532,32 @@ async function handleAdminClearAll(request, env, corsHeaders) {
   await env.DB.prepare('DELETE FROM Users').run();
 
   return json({ ok: true, message: `已清空全部 ${total} 个用户`, deleted: total }, 200, corsHeaders);
+}
+
+// ── 紧急清理所有数据（无需认证，用于首次部署后清除旧数据） ──
+async function handleEmergencyClear(env, corsHeaders) {
+  try {
+    // 先确保表结构正确
+    try { await env.DB.prepare('ALTER TABLE Users ADD COLUMN security_question TEXT DEFAULT NULL').run(); } catch(e) {}
+    try { await env.DB.prepare('ALTER TABLE Users ADD COLUMN security_answer TEXT DEFAULT NULL').run(); } catch(e) {}
+
+    const countResult = await env.DB.prepare('SELECT COUNT(*) as total FROM Users').first();
+    const total = countResult ? countResult.total : 0;
+
+    if (total === 0) {
+      return json({ ok: true, message: '数据库已为空，无需清理', deleted: 0 }, 200, corsHeaders);
+    }
+
+    await env.DB.prepare('DELETE FROM Users').run();
+
+    return json({
+      ok: true,
+      message: `紧急清理完成！已删除 ${total} 条用户数据。请立即删除此端点以确保安全。`,
+      deleted: total
+    }, 200, corsHeaders);
+  } catch(err) {
+    return json({ error: '清理失败: ' + err.message }, 500, corsHeaders);
+  }
 }
 
 function json(data, status = 200, headers = {}) {
