@@ -26,14 +26,16 @@ function checkLogin() {
 }
 
 function showLogin() {
-  $('loginOverlay').style.display = 'flex';
+  var lo = $('loginOverlay');
+  lo.style.setProperty('display', 'flex', 'important');
   $('appContent').style.display = 'none';
   document.querySelector('.bottom-nav').style.display = 'none';
   $('fabBtn').style.display = 'none';
 }
 
 function hideLogin() {
-  $('loginOverlay').style.display = 'none';
+  var lo = $('loginOverlay');
+  lo.style.setProperty('display', 'none', 'important');
   $('appContent').style.display = 'block';
   document.querySelector('.bottom-nav').style.display = 'flex';
   $('fabBtn').style.display = 'flex';
