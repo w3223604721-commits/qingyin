@@ -1003,10 +1003,8 @@ function renderUserTable(users){
 
 function renderPagination(total,page,limit){
   var c=document.getElementById('userPagination');var tp=Math.ceil(total/limit);
-  if(tp<=1){c.innerHTML=total>0?'<div class="page-info">共'+total+'条记录</div>:'';return;}
-  c.innerHTML='<button '+(page<=1?'disabled':'')+'onclick="goPage('+(page-1)+')">上一页</button>'+
-    '<span class="page-info">第'+page+'/'+tp+'页（共'+total+'条）</span>'+
-    '<button '+(page>=tp?'disabled':'')+'onclick="goPage('+(page+1)+')">下一页</button>';
+  if(tp<=1){c.innerHTML=`<div class="page-info">共${total}条记录</div>`;return;}
+  c.innerHTML=`<button ${page<=1?'disabled':''} onclick="goPage(${page-1})">上一页</button><span class="page-info">第${page}/${tp}页（共${total}条）</span><button ${page>=tp?'disabled':''} onclick="goPage(${page+1})">下一页</button>`;
 }
 function goPage(p){userPage=p;loadUsers();}
 function searchUsers(){userSearch=document.getElementById('userSearch').value.trim();userPage=1;loadUsers();}
@@ -1065,10 +1063,8 @@ function renderTrashTable(users){
 
 function renderTrashPagination(total,page,limit){
   var c=document.getElementById('trashPagination');var tp=Math.ceil(total/limit);
-  if(tp<=1){c.innerHTML=total>0?'<div class="page-info">共'+total+'条记录</div>:'';return;}
-  c.innerHTML='<button '+(page<=1?'disabled':'')+'onclick="trashGoPage('+(page-1)+')">上一页</button>'+
-    '<span class="page-info">第'+page+'/'+tp+'页（共'+total+'条）</span>'+
-    '<button '+(page>=tp?'disabled':'')+'onclick="trashGoPage('+(page+1)+')">下一页</button>';
+  if(tp<=1){c.innerHTML=`<div class="page-info">共${total}条记录</div>`;return;}
+  c.innerHTML=`<button ${page<=1?'disabled':''} onclick="trashGoPage(${page-1})">上一页</button><span class="page-info">第${page}/${tp}页（共${total}条）</span><button ${page>=tp?'disabled':''} onclick="trashGoPage(${page+1})">下一页</button>`;
 }
 function trashGoPage(p){trashPage=p;loadTrash();}
 
