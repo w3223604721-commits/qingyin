@@ -36,7 +36,7 @@ cloudbase-state.json
 
 # Nested repos
 prototype/
-wechat/
 
 # Misc
 $null 
+.vercel

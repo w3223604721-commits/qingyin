@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>轻印 - 旅行记忆</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- 主内容区 -->
+  <main class="app-content" id="appContent">
+
+    <!-- ========== Tab 1: 日志 ========== -->
+    <div class="tab-page active" id="tab-journal">
+      <div class="page-header journal-header">
+        <h1>📖 我的旅程</h1>
+        <span class="header-sub">记录每一段旅程</span>
+      </div>
+
+      <!-- 旅程列表 -->
+      <div class="journal-list" id="journalList">
+        <div class="empty-state" id="journalEmpty">
+          <div class="empty-icon">🗺️</div>
+          <h3>还没有旅程记录</h3>
+          <p>点击右下角 <strong>+</strong> 开启你的第一段旅程吧</p>
+        </div>
+      </div>
+
+      <!-- 旅程详情视图：顶部轮播 + 每日日记 -->
+      <div class="journey-detail" id="journeyDetail" style="display:none;">
+        <!-- 返回栏 -->
+        <div class="detail-nav-bar">
+          <button class="btn-back" onclick="backToJournals()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            返回
+          </button>
+          <h2 id="currentJourneyTitle"></h2>
+          <button class="journey-menu-btn" onclick="showJourneyMenuDetail()">⋯</button>
+        </div>
+
+        <!-- 图片轮播区域（记忆点） -->
+        <div class="carousel-container" id="carouselContainer" style="display:none;">
+          <div class="carousel-wrapper" id="carouselWrapper">
+            <div class="carousel-track" id="carouselTrack"></div>
+          </div>
+          <div class="carousel-dots" id="carouselDots"></div>
+          <div class="carousel-counter" id="carouselCounter"></div>
+          <div class="carousel-empty-hint" id="carouselEmptyHint" style="display:none;">
+            <span>📷 还没有照片，去日记中添加吧</span>
+          </div>
+        </div>
+
+        <!-- 日记列表 -->
+        <div class="day-entries-scroll" id="dayEntriesScroll">
+          <div class="day-list" id="dayList"></div>
+          <button class="btn-add-day" onclick="openDayModal()">＋ 添加新的一天</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== Tab 2: 打卡 ========== -->
+    <div class="tab-page" id="tab-checkin">
+      <div class="checkin-fullscreen-map-wrap" id="checkinMapWrap">
+        <!-- 地图容器（天地图）全屏 -->
+        <div id="map"></div>
+        <!-- 右侧地图工具栏（参考山河旅记） -->
+        <div class="map-right-toolbar">
+          <button class="map-tool-btn" onclick="locateUserOnMap()" title="定位到我的位置">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 00-8 8c0 5.4 7 11 8 12 1-1 8-6.6 8-12a8 8 0 00-8-8z"/></svg>
+          </button>
+          <button class="map-tool-btn" onclick="openCheckinModal()" title="添加打卡">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <button class="map-tool-btn" onclick="openMapFullscreen()" title="全屏查看">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+          </button>
+        </div>
+        <!-- 足迹记录控制栏 -->
+        <div class="footprint-tracker-bar" id="footprintTrackerBar">
+          <div class="footprint-status" id="footprintStatus">
+            <span class="fp-dot"></span>
+            <span id="footprintStatusText">就绪</span>
+          </div>
+          <button class="fp-track-btn" id="fpTrackBtn" onclick="toggleFootprintTracking()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            开始记录
+          </button>
+          <div class="fp-info" id="fpInfo">
+            <span id="fpPointCount">0</span> 个足迹点
+          </div>
+        </div>
+        <!-- 地图左侧回放按钮 -->
+        <div class="map-left-toolbar">
+          <button class="map-tool-btn" id="btnReplay" onclick="toggleReplay()" title="足迹回放">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== Tab 3: 分享 ========== -->
+    <div class="tab-page" id="tab-share">
+      <div class="page-header">
+        <h1>🧾 旅程分享</h1>
+        <span class="header-sub">导出旅行记忆，分享精彩时刻</span>
+      </div>
+
+      <!-- 分享模式切换 -->
+      <div class="share-tabs">
+        <button class="share-tab active" data-share-tab="export" onclick="switchShareTab('export')">日志导出</button>
+        <button class="share-tab" data-share-tab="template" onclick="switchShareTab('template')">自定义模板</button>
+      </div>
+
+      <!-- ===== 分享子Tab1: 日志导出 ===== -->
+      <div class="share-panel active" id="sharePanelExport">
+        <div class="share-section-title">选择要导出的旅程</div>
+        <div class="share-journey-list" id="shareJourneyList">
+          <div class="empty-state" id="shareEmpty">
+            <div class="empty-icon">🎫</div>
+            <h3>还没有可分享的旅程</h3>
+            <p>先去「日志」创建旅程并添加日记和照片吧</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 分享子Tab2: 自定义模板 ===== -->
+      <div class="share-panel" id="sharePanelTemplate">
+        <!-- 模板风格选择 -->
+        <div class="template-style-selector">
+          <div class="template-style-title">选择分享风格</div>
+          <div class="template-style-list">
+            <div class="template-style-card active" data-style="receipt" onclick="selectTemplateStyle('receipt')">
+              <div class="template-preview receipt-preview-mini">🧾</div>
+              <div class="template-name">小票风格</div>
+            </div>
+            <div class="template-style-card" data-style="card" onclick="selectTemplateStyle('card')">
+              <div class="template-preview card-preview-mini">🎴</div>
+              <div class="template-name">卡片风格</div>
+              <div class="template-badge-coming">即将上线</div>
+            </div>
+            <div class="template-style-card" data-style="timeline" onclick="selectTemplateStyle('timeline')">
+              <div class="template-preview timeline-preview-mini">📅</div>
+              <div class="template-name">时间线</div>
+              <div class="template-badge-coming">即将上线</div>
+            </div>
+            <div class="template-style-card" data-style="magazine" onclick="selectTemplateStyle('magazine')">
+              <div class="template-preview mag-preview-mini">📰</div>
+              <div class="template-name">杂志风</div>
+              <div class="template-badge-coming">即将上线</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 自定义编辑区 -->
+        <div class="template-custom-editor">
+          <div class="editor-section-title">自定义内容</div>
+
+          <!-- 自定义标题 -->
+          <div class="form-group">
+            <label>分享标题</label>
+            <input type="text" id="tplCustomTitle" placeholder="如：这一段生活的小票" maxlength="30">
+          </div>
+
+          <!-- 自定义图片上传（2-9张，每图配文字、地点、日期） -->
+          <div class="form-group">
+            <label>选择图片 (2-9张)</label>
+            <div class="multi-photo-upload" id="tplPhotoUploadArea">
+              <input type="file" id="tplPhotoInput" accept="image/*" multiple onchange="handleTplPhotos(this)" style="display:none;">
+              <div class="tpl-photo-editor-list" id="tplPhotoEditorList">
+                <!-- JS动态生成每张图的编辑区 -->
+              </div>
+              <button class="add-photo-btn-wide" onclick="triggerImagePicker({multiple:true,onFileSelected:function(input){transferFilesToInput(input,'tplPhotoInput');handleTplPhotos($('tplPhotoInput'));}})" id="tplAddPhotoBtn">＋ 添加图片（拍摄/选取图片）</button>
+              <span class="photo-count-hint" id="tplPhotoCountHint">0/9 张</span>
+            </div>
+          </div>
+
+          <!-- 预览 & 生成按钮 -->
+          <button class="btn btn-primary btn-block" onclick="generateCustomReceipt()" style="margin-top:8px;">生成预览</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== Tab 4: 我的 ========== -->
+    <div class="tab-page" id="tab-profile">
+      <!-- 头像与档案 -->
+      <div class="profile-header-card">
+        <div class="profile-avatar-wrap" onclick="openAvatarModal()">
+          <div class="profile-avatar" id="profileAvatar">
+            <img id="avatarImg" src="" alt="" style="display:none;">
+            <span id="avatarText">旅</span>
+          </div>
+          <div class="avatar-edit-badge">✏️</div>
+        </div>
+        <div class="profile-info">
+          <h2 id="profileName">旅行者</h2>
+          <p id="profileBio">探索世界，记录美好</p>
+          <div class="profile-stats">
+            <span id="profileJourneys">0 段旅程</span>
+            <span class="dot">·</span>
+            <span id="profileCheckins">0 个打卡</span>
+          </div>
+        </div>
+        <button class="btn-edit-profile" onclick="openProfileModal()">编辑资料</button>
+      </div>
+
+      <!-- 勋章入口 -->
+      <div class="medal-card" onclick="openMedalPage()">
+        <div class="medal-card-left">
+          <span class="medal-icon">🏅</span>
+          <div>
+            <h4>我的勋章</h4>
+            <p class="medal-subtitle">已点亮 <strong id="medalLitCount">0</strong> / <strong id="medalTotalCount">34</strong> 个省市区</p>
+          </div>
+        </div>
+        <span class="menu-arrow">›</span>
+      </div>
+
+      <!-- 旅行人格 -->
+      <div class="personality-card">
+        <div class="personality-badge" id="personalityBadge">🧭 探索者</div>
+        <p id="personalityDesc">每一段旅程都是新的发现</p>
+      </div>
+
+      <!-- 统计卡片（可点击查看详情） -->
+      <div class="stats-row">
+        <div class="stat-card clickable" onclick="openStatDetail('checkins')">
+          <div class="stat-num" id="statCheckins">0</div>
+          <div class="stat-label">打卡点</div>
+        </div>
+        <div class="stat-card clickable" onclick="openStatDetail('photos')">
+          <div class="stat-num" id="statPhotos">0</div>
+          <div class="stat-label">照片</div>
+        </div>
+        <div class="stat-card clickable" onclick="openStatDetail('provinces')">
+          <div class="stat-num" id="statProvinces">0</div>
+          <div class="stat-label">省份/城市</div>
+        </div>
+        <div class="stat-card clickable" onclick="openStatDetail('journeys')">
+          <div class="stat-num" id="statJourneys">0</div>
+          <div class="stat-label">旅程</div>
+        </div>
+      </div>
+
+      <!-- 数据洞察 -->
+      <div class="insight-section">
+        <div class="section-title-row">
+          <h3>📊 数据洞察</h3>
+          <button class="insight-toggle-btn" onclick="toggleInsightDetail()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </button>
+        </div>
+
+        <!-- 数据洞察概览卡片（折叠状态） -->
+        <div class="insight-cards" id="insightCards">
+          <div class="insight-card" id="insightMonthly" onclick="openInsightPanel('monthly')">
+            <div class="insight-icon">📅</div>
+            <div class="insight-info">
+              <div class="insight-label">月度活跃</div>
+              <div class="insight-value" id="insightMonthlyValue">--</div>
+              <div class="insight-sub">近12个月旅行活跃度</div>
+            </div>
+          </div>
+          <div class="insight-card" id="insightFootprint" onclick="openInsightPanel('footprint')">
+            <div class="insight-icon">👣</div>
+            <div class="insight-info">
+              <div class="insight-label">足迹增长</div>
+              <div class="insight-value" id="insightFootprintValue">--</div>
+              <div class="insight-sub">近12天足迹点统计</div>
+            </div>
+          </div>
+          <div class="insight-card" id="insightSeason" onclick="openInsightPanel('season')">
+            <div class="insight-icon">🍂</div>
+            <div class="insight-info">
+              <div class="insight-label">季节分布</div>
+              <div class="insight-value" id="insightSeasonValue">--</div>
+              <div class="insight-sub">季节旅行偏好</div>
+            </div>
+          </div>
+          <div class="insight-card" id="insightTags" onclick="openInsightPanel('tags')">
+            <div class="insight-icon">🏷️</div>
+            <div class="insight-info">
+              <div class="insight-label">标签统计</div>
+              <div class="insight-value" id="insightTagsValue">--</div>
+              <div class="insight-sub">标签使用统计</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 数据洞察详情面板（默认隐藏） -->
+        <div class="insight-detail-panel" id="insightDetailPanel" style="display:none;">
+          <!-- 面板头部：返回按钮 + 标题 -->
+          <div class="insight-detail-header">
+            <button class="btn-back" onclick="closeInsightPanel()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              返回
+            </button>
+            <span class="insight-detail-title">详细数据</span>
+          </div>
+          <!-- Tab 标签栏 -->
+          <div class="insight-tab-bar">
+            <button class="insight-tab active" data-insight-tab="monthly" onclick="switchInsightTab('monthly')">月度活跃</button>
+            <button class="insight-tab" data-insight-tab="footprint" onclick="switchInsightTab('footprint')">足迹增长</button>
+            <button class="insight-tab" data-insight-tab="season" onclick="switchInsightTab('season')">季节分布</button>
+            <button class="insight-tab" data-insight-tab="tags" onclick="switchInsightTab('tags')">标签统计</button>
+          </div>
+          <!-- 图表内容区 -->
+          <div class="insight-chart-area" id="insightChartArea">
+            <!-- JS 动态渲染 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 功能列表 -->
+      <div class="profile-menu">
+        <div class="menu-item" onclick="switchTab('checkin')">
+          <span class="menu-icon">🗺️</span>
+          <span>我的足迹</span>
+          <span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-item" onclick="openMedalPage()">
+          <span class="menu-icon">🏅</span>
+          <span>我的勋章</span>
+          <span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-item" onclick="exportData()">
+          <span class="menu-icon">📤</span>
+          <span>导出数据</span>
+          <span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-item" onclick="importData()">
+          <span class="menu-icon">📥</span>
+          <span>导入数据</span>
+          <span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-item" onclick="openSettingsModal()">
+          <span class="menu-icon">⚙️</span>
+          <span>设置</span>
+          <span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-item" onclick="openAboutModal()">
+          <span class="menu-icon">ℹ️</span>
+          <span>关于轻印</span>
+          <span class="menu-arrow">›</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 底部导航栏 -->
+  <nav class="bottom-nav">
+    <div class="nav-tab active" data-tab="journal" onclick="switchTab('journal')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+      <span>日志</span>
+    </div>
+    <div class="nav-tab" data-tab="checkin" onclick="switchTab('checkin')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <span>打卡</span>
+    </div>
+    <div class="nav-tab" data-tab="share" onclick="switchTab('share')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <span>分享</span>
+    </div>
+    <div class="nav-tab" data-tab="profile" onclick="switchTab('profile')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>我的</span>
+    </div>
+  </nav>
+
+  <!-- FAB 浮动按钮 -->
+  <button class="fab" id="fabBtn" onclick="handleFabClick()" title="添加新旅程">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+
+  <!-- ================================================================ -->
+  <!--                        模 式 框                                -->
+  <!-- ================================================================ -->
+
+  <!-- 新建/编辑旅程模态框 -->
+  <div class="modal-overlay" id="journeyModal" style="display:none;" onclick="closeModalOutside(event,'journeyModal')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="journeyModalTitle">新建旅程</h3>
+        <button class="modal-close" onclick="closeModal('journeyModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>旅程名称 *</label>
+          <input type="text" id="journeyName" placeholder="如：夏日北海道之旅" maxlength="30">
+        </div>
+        <div class="form-group">
+          <label>目的地城市</label>
+          <input type="text" id="journeyCity" placeholder="如：札幌、小樽" maxlength="50">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>开始日期</label>
+            <input type="date" id="journeyStart">
+          </div>
+          <div class="form-group">
+            <label>结束日期</label>
+            <input type="date" id="journeyEnd">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>简介</label>
+          <textarea id="journeyDesc" rows="3" placeholder="记录这段旅程的美好..." maxlength="200"></textarea>
+        </div>
+        <!-- 旅程封面图片 -->
+        <div class="form-group">
+          <label>封面图片 (可选)</label>
+          <div class="photo-upload">
+            <input type="file" id="jourCoverInput" accept="image/*" onchange="previewCoverPhoto(this)" style="display:none;">
+            <div class="photo-preview" id="coverPhotoPreview" onclick="triggerImagePicker({onFileSelected:function(input){transferFileToInput(input,'jourCoverInput');previewCoverPhoto($('jourCoverInput'));}})">
+              <span>📷 点击上传封面（拍摄/选取图片）</span>
+            </div>
+          </div>
+        </div>
+        <input type="hidden" id="journeyEditId" value="">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('journeyModal')">取消</button>
+        <button class="btn btn-primary" onclick="saveJourney()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 日记详情模态框（含图片管理） -->
+  <div class="modal-overlay modal-large" id="dayDetailModal" style="display:none;" onclick="closeModalOutside(event,'dayDetailModal')">
+    <div class="modal modal-day-detail" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="dayDetailTitle">日记详情</h3>
+        <button class="modal-close" onclick="closeModal('dayDetailModal')">✕</button>
+      </div>
+      <div class="modal-body" id="dayDetailBody">
+        <!-- 动态填充 -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-delete-btn" onclick="deleteDayFromDetail()">🗑️ 删除</button>
+        <div style="flex:1;"></div>
+        <button class="btn btn-secondary" onclick="closeModal('dayDetailModal')">关闭</button>
+        <button class="btn btn-primary" onclick="saveDayFromDetail()">保存修改</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 添加日记录模态框（简化版，进入后可添加图片） -->
+  <div class="modal-overlay" id="dayModal" style="display:none;" onclick="closeModalOutside(event,'dayModal')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="dayModalTitle">新的一天</h3>
+        <button class="modal-close" onclick="closeModal('dayModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>日期</label>
+          <input type="date" id="dayDate">
+        </div>
+        <div class="form-group">
+          <label>标题</label>
+          <input type="text" id="dayTitle" placeholder="如：到达札幌！" maxlength="30">
+        </div>
+        <div class="form-group">
+          <label>内容</label>
+          <textarea id="dayContent" rows="4" placeholder="记录今天的所见所闻..." maxlength="500"></textarea>
+        </div>
+        <div class="form-group">
+          <label>照片 (最多50张)</label>
+          <div class="multi-photo-upload" id="dayPhotoUploadArea">
+            <input type="file" id="dayPhotoInput" accept="image/*" multiple onchange="handleDayPhotos(this)" style="display:none;">
+            <div class="photo-grid" id="dayPhotoGrid"></div>
+            <button class="add-photo-btn" onclick="triggerImagePicker({multiple:true,onFileSelected:function(input){transferFilesToInput(input,'dayPhotoInput');handleDayPhotos($('dayPhotoInput'));}})">＋ 添加照片（拍摄/选取图片）</button>
+          </div>
+        </div>
+        <input type="hidden" id="dayEditId" value="">
+        <input type="hidden" id="dayJourneyId" value="">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('dayModal')">取消</button>
+        <button class="btn btn-primary" onclick="saveDay()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 打卡模态框 -->
+  <div class="modal-overlay" id="checkinModal" style="display:none;" onclick="closeModalOutside(event,'checkinModal')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>添加打卡</h3>
+        <button class="modal-close" onclick="closeModal('checkinModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>地点名称 *</label>
+          <input type="text" id="checkinPlace" placeholder="如：天安门广场" maxlength="30">
+        </div>
+        <div class="form-group">
+          <label>城市</label>
+          <input type="text" id="checkinCity" placeholder="如：北京" maxlength="20">
+        </div>
+        <div class="form-group">
+          <label>省份/直辖市</label>
+          <input type="text" id="checkinProvince" placeholder="如：北京市" maxlength="20">
+        </div>
+        <div class="form-group">
+          <label>照片</label>
+          <div class="photo-upload">
+            <input type="file" id="checkinPhoto" accept="image/*" onchange="previewCheckinPhoto()" style="display:none;">
+            <div class="photo-preview" id="photoPreview" onclick="triggerImagePicker({onFileSelected:function(input){transferFileToInput(input,'checkinPhoto');previewCheckinPhoto();}})">
+              <span>📷 点击上传照片（拍摄/选取图片）</span>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>备注</label>
+          <textarea id="checkinNote" rows="2" placeholder="记录此刻的感受..." maxlength="200"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('checkinModal')">取消</button>
+        <button class="btn btn-primary" onclick="saveCheckin()">打卡</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 编辑资料模态框 -->
+  <div class="modal-overlay" id="profileModal" style="display:none;" onclick="closeModalOutside(event,'profileModal')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>编辑资料</h3>
+        <button class="modal-close" onclick="closeModal('profileModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>头像</label>
+          <div class="avatar-upload-area" onclick="triggerImagePicker({onFileSelected:function(input){transferFileToInput(input,'profileAvatarInput');previewProfileAvatar($('profileAvatarInput'));}})">
+            <input type="file" id="profileAvatarInput" accept="image/*" onchange="previewProfileAvatar(this)" style="display:none;">
+            <div class="avatar-preview-lg" id="profileAvatarPreview">
+              <img id="profileAvatarImgPreview" src="" alt="" style="display:none;">
+              <span id="profileAvatarTextPreview">旅</span>
+            </div>
+            <span class="avatar-upload-hint">点击更换头像</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>昵称</label>
+          <input type="text" id="profileNickname" placeholder="你的旅行者名称" maxlength="15">
+        </div>
+        <div class="form-group">
+          <label>个性签名</label>
+          <textarea id="profileSignature" rows="2" placeholder="用一句话介绍自己..." maxlength="50"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('profileModal')">取消</button>
+        <button class="btn btn-primary" onclick="saveProfile()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设置模态框 -->
+  <div class="modal-overlay" id="settingsModal" style="display:none;" onclick="closeModalOutside(event,'settingsModal')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>设置</h3>
+        <button class="modal-close" onclick="closeModal('settingsModal')">✕</button>
+      </div>
+      <div class="modal-body settings-body">
+        <div class="setting-item" onclick="openAccountSecurity()">
+          <div class="setting-info">
+            <h4>账号与安全</h4>
+            <p>本地账户信息、数据存储方式</p>
+          </div>
+          <span class="menu-arrow">›</span>
+        </div>
+        <div class="setting-item" onclick="openTrashPage()">
+          <div class="setting-info">
+            <h4>行程回收站</h4>
+            <p>恢复已删除的旅程</p>
+          </div>
+          <span class="menu-arrow">›</span>
+        </div>
+        <div class="setting-item" onclick="openPermissionSettings()">
+          <div class="setting-info">
+            <h4>权限管理</h4>
+            <p>管理通知、位置、照片、相机权限</p>
+          </div>
+          <span class="menu-arrow">›</span>
+        </div>
+        <div class="setting-item" onclick="openFeedbackPage()">
+          <div class="setting-info">
+            <h4>和开发者聊聊天</h4>
+            <p>反馈建议 &amp; 问题报告</p>
+          </div>
+          <span class="menu-arrow">›</span>
+        </div>
+        <div class="setting-item" onclick="openAboutModal();closeModal('settingsModal')">
+          <div class="setting-info">
+            <h4>版本信息</h4>
+            <p>内测 2.0 Build 2026.06</p>
+          </div>
+        </div>
+        <div class="setting-item danger" onclick="clearAllData()">
+          <div class="setting-info">
+            <h4 style="color:var(--danger)">清除所有数据</h4>
+            <p>此操作不可恢复</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 关于模态框 -->
+  <div class="modal-overlay" id="aboutModal" style="display:none;" onclick="closeModalOutside(event,'aboutModal')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>关于轻印</h3>
+        <button class="modal-close" onclick="closeModal('aboutModal')">✕</button>
+      </div>
+      <div class="modal-body about-body">
+        <div class="about-logo">🗺️</div>
+        <h2>轻印</h2>
+        <p class="about-tagline">Map + Memory = 记录每一段旅程</p>
+        <p class="about-version">内测 2.0 Build 2026.06</p>
+        <p class="about-desc">轻印源于一次简单的想法：旅行本该是轻松愉快的，不该被繁琐的 App 困扰。<br><br>我们曾无数次在旅途中打开各种旅游日记、打卡工具，却总被复杂的功能劝退——明明只是想记下"今天去了哪里、看到了什么"，为什么需要填这么多表单？选分类、打标签、写攻略……这些真的有必要吗？<br><br>所以轻印决定做减法：<strong>在地图上留下脚印，用照片和文字珍藏记忆</strong>。没有花哨的功能堆砌，只有你最需要的：打开地图就能看到走过的路，点一下就能记录此刻的心情。简洁、直观、懂你。<br><br>愿每一次出发，都能被温柔记录。🌍</p>
+        <p class="about-copy">&copy; 2026 轻印 Team · 用心记录每一步</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 统计详情面板 -->
+  <div class="modal-overlay" id="statDetailModal" style="display:none;" onclick="closeModalOutside(event,'statDetailModal')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="statDetailTitle">统计详情</h3>
+        <button class="modal-close" onclick="closeModal('statDetailModal')">✕</button>
+      </div>
+      <div class="modal-body stat-detail-body" id="statDetailBody">
+        <!-- 动态填充 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 全屏地图弹窗 -->
+  <div class="fullscreen-map-overlay" id="fullscreenMapOverlay" style="display:none;" onclick="closeFullscreenMap(event)">
+    <div class="fullscreen-map-container" onclick="event.stopPropagation()">
+      <button class="fullscreen-map-close" onclick="closeFullscreenMapDirect()">✕ 关闭</button>
+      <div id="fullscreenMapEl"></div>
+    </div>
+  </div>
+
+  <!-- 小票预览弹窗（含自定义内容和多模板支持） -->
+  <div class="receipt-overlay" id="receiptOverlay" style="display:none;" onclick="closeReceipt(event)">
+    <div class="receipt-container" id="receiptContainer" onclick="event.stopPropagation()">
+      <div class="receipt-paper" id="receiptPaper">
+        <div class="receipt-header">
+          <div class="receipt-logo">LIFE RECEIPT · 生活小票</div>
+          <div class="receipt-title" id="rctMainTitle">这一段生活的小票</div>
+        </div>
+        <div class="receipt-body" id="receiptBodyContent">
+          <!-- 动态填充 -->
+        </div>
+        <div class="receipt-footer-custom" id="receiptFooterCustom">
+          <div class="receipt-barcode">||||| |||||| ||| ||||||| |||</div>
+          <div class="receipt-thanks">LIFE RECEIPT · MAKE YOUR OWN</div>
+        </div>
+      </div>
+      <div class="receipt-actions">
+        <button class="share-btn wechat" onclick="shareToWechat()">微信</button>
+        <button class="share-btn qq" onclick="shareToQQ()">QQ</button>
+        <button class="share-btn save" onclick="saveAsImage()">保存相册</button>
+        <button class="share-btn more" onclick="shareMore()">更多</button>
+      </div>
+      <button class="receipt-close" onclick="closeReceiptDirect()">✕</button>
+    </div>
+  </div>
+
+  <!-- 日志导出为图片的弹窗 -->
+  <div class="modal-overlay" id="exportImageModal" style="display:none;" onclick="closeModalOutside(event,'exportImageModal')">
+    <div class="modal modal-export-img" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>导出日志图片</h3>
+        <button class="modal-close" onclick="closeModal('exportImageModal')">✕</button>
+      </div>
+      <div class="modal-body" id="exportImageBody">
+        <div class="export-image-canvas-wrap" id="exportCanvasWrap"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('exportImageModal')">关闭</button>
+        <button class="btn btn-primary" onclick="downloadExportImage()">保存到相册</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 图片查看器（Lightbox） -->
+  <div class="lightbox-overlay" id="lightboxOverlay" style="display:none;" onclick="closeLightbox(event)">
+    <button class="lightbox-close" onclick="closeLightboxDirect()">✕</button>
+    <button class="lightbox-prev" onclick="lightBoxPrev()">‹</button>
+    <button class="lightbox-next" onclick="lightBoxNext()">›</button>
+    <img id="lightboxImg" src="" alt="">
+    <div class="lightbox-counter" id="lightboxCounter"></div>
+  </div>
+
+  <!-- 勋章页面（全屏覆盖） -->
+  <div class="medal-page" id="medalPage" style="display:none;">
+    <div class="medal-page-header">
+      <button class="btn-back" onclick="closeMedalPage()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        返回
+      </button>
+      <h2>我的勋章</h2>
+    </div>
+    <div class="medal-stats-bar">
+      <div class="medal-stat-item">
+        <strong id="medalPageLit">0</strong><span>/34</span>
+        <small>已点亮</small>
+      </div>
+      <div class="medal-stat-item">
+        <strong id="medalPagePercent">0%</strong>
+        <small>完成度</small>
+      </div>
+    </div>
+    <div class="medal-filter-tabs">
+      <button class="medal-filter-btn active" onclick="filterMedals('all', this)">全部</button>
+      <button class="medal-filter-btn" onclick="filterMedals('lit', this)">已点亮</button>
+      <button class="medal-filter-btn" onclick="filterMedals('unlit', this)">未点亮</button>
+    </div>
+    <div class="medal-grid" id="medalGrid">
+      <!-- JS 动态生成 -->
+    </div>
+    <div class="medal-page-bottom-spacer"></div>
+  </div>
+
+  <!-- 子页面容器：账号与安全 -->
+  <div class="sub-page" id="subPageAccount" style="display:none;">
+    <div class="sub-page-header">
+      <button class="btn-back" onclick="closeSubPage('subPageAccount')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        返回
+      </button>
+      <h2>账号与安全</h2>
+    </div>
+    <div class="sub-page-content">
+      <div class="account-card">
+        <div class="account-row">
+          <span class="account-label">账号类型</span>
+          <span class="account-value">本地账户</span>
+        </div>
+        <div class="account-row">
+          <span class="account-label">数据存储</span>
+          <span class="account-value">浏览器 LocalStorage</span>
+        </div>
+        <div class="account-row">
+          <span class="account-label">设备ID</span>
+          <span class="account-value mono" id="deviceIdDisplay">--</span>
+        </div>
+        <div class="account-row">
+          <span class="account-label">创建时间</span>
+          <span class="account-value" id="accountCreatedTime">--</span>
+        </div>
+      </div>
+      <div class="sub-page-section-title">安全提示</div>
+      <div class="info-card">
+        <p>您的所有数据均存储在当前浏览器的本地存储中。清除浏览器数据或更换设备可能导致数据丢失，请定期使用「导出数据」功能备份。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 子页面容器：行程回收站 -->
+  <div class="sub-page" id="subPageTrash" style="display:none;">
+    <div class="sub-page-header">
+      <button class="btn-back" onclick="closeSubPage('subPageTrash')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        返回
+      </button>
+      <h2>行程回收站</h2>
+    </div>
+    <div class="sub-page-content" id="trashContent">
+      <div class="empty-state small" id="trashEmpty">
+        <div class="empty-icon">🗑️</div>
+        <p>回收站是空的</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 子页面容器：权限管理 -->
+  <div class="sub-page" id="subPagePermissions" style="display:none;">
+    <div class="sub-page-header">
+      <button class="btn-back" onclick="closeSubPage('subPagePermissions')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        返回
+      </button>
+      <h2>权限管理</h2>
+    </div>
+    <div class="sub-page-content" id="permissionSettingsContent">
+      <!-- JS 动态填充 -->
+    </div>
+  </div>
+
+  <!-- 子页面容器：开发者聊天 -->
+  <div class="sub-page" id="subPageFeedback" style="display:none;">
+    <div class="sub-page-header">
+      <button class="btn-back" onclick="closeSubPage('subPageFeedback')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        返回
+      </button>
+      <h2>和开发者聊聊天</h2>
+    </div>
+    <div class="sub-page-content feedback-content">
+      <div class="feedback-avatar-area">
+        <div class="dev-avatar">👨‍💻</div>
+        <h3>Hi！我是轻印的开发者</h3>
+        <p>有什么想法或建议？欢迎告诉我！</p>
+      </div>
+      <div class="feedback-form">
+        <div class="form-group">
+          <label>反馈类型</label>
+          <select id="fbType">
+            <option value="bug">🐛 问题反馈</option>
+            <option value="feature">💡 功能建议</option>
+            <option value="other">💬 其他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>详细描述</label>
+          <textarea id="fbContent" rows="5" placeholder="请详细描述你的问题或建议..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>联系方式 (选填)</label>
+          <input type="text" id="fbContact" placeholder="邮箱或微信号">
+        </div>
+        <button class="btn btn-primary btn-block" onclick="submitFeedback()">发送反馈</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 权限询问弹窗 -->
+  <div class="permission-overlay" id="permissionOverlay" style="display:none;">
+    <div class="permission-dialog" id="permissionDialog">
+      <div class="permission-icon" id="permissionIcon"></div>
+      <h3 class="permission-title" id="permissionTitle"></h3>
+      <p class="permission-desc" id="permissionDesc"></p>
+      <div class="permission-actions" id="permissionActions"></div>
+    </div>
+  </div>
+
+  <!-- Toast 提示 -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ================================================================ -->
+  <!--                      登录/注册覆盖层                             -->
+  <!-- ================================================================ -->
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-container">
+      <!-- 品牌区 -->
+      <div class="login-brand">
+        <svg class="login-logo-icon" viewBox="0 0 64 64" fill="none">
+          <g transform="translate(8,18) rotate(-15)">
+            <ellipse cx="10" cy="22" rx="7" ry="11" fill="#6366F1"/>
+            <circle cx="5" cy="8" r="3.5" fill="#6366F1"/>
+            <circle cx="10" cy="5" r="3" fill="#6366F1"/>
+            <circle cx="15" cy="4" r="2.5" fill="#6366F1"/>
+          </g>
+          <g transform="translate(30,12) rotate(15)">
+            <ellipse cx="10" cy="24" rx="7" ry="11" fill="#818CF8"/>
+            <circle cx="5" cy="9" r="3.5" fill="#818CF8"/>
+            <circle cx="10" cy="6" r="3" fill="#818CF8"/>
+            <circle cx="15" cy="5" r="2.5" fill="#818CF8"/>
+          </g>
+          <path d="M16 52 Q32 56 48 52" stroke="#6366F1" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        </svg>
+        <h1>轻印</h1>
+        <p>Map + Memory · 记录每段旅程</p>
+      </div>
+
+      <!-- 登录表单 -->
+      <div class="login-form" id="loginFormView">
+        <input type="text" id="loginUsername" placeholder="用户名" autocomplete="username" maxlength="24">
+        <div class="pwd-wrap">
+          <input type="password" id="loginPassword" placeholder="密码" autocomplete="current-password" maxlength="32">
+          <button class="toggle-pwd-btn" onclick="toggleLoginPwd()" tabindex="-1">
+            <svg id="loginPwdIcon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#999" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <button class="btn-login-submit" id="btnLoginSubmit" onclick="doLogin()">登录</button>
+        <div class="login-links">
+          <span class="login-link" onclick="switchLoginView('register')">创建账号</span>
+          <span class="login-link" style="color:#94A3B8;">忘记密码</span>
+        </div>
+        <div class="login-agreement">
+          <label class="login-checkbox-wrap">
+            <input type="checkbox" id="loginAgreed" checked>
+            <span class="login-check"></span>
+          </label>
+          <span>已阅读并同意<span class="agreement-link" onclick="openAgreementPage()">《轻印用户协议》</span>和<span class="agreement-link" onclick="openPrivacyPage()">《轻印隐私声明》</span></span>
+        </div>
+      </div>
+
+      <!-- 注册表单 -->
+      <div class="login-form" id="registerFormView" style="display:none;">
+        <input type="text" id="regUsername" placeholder="请设置用户名（5-24位字母/数字/下划线）" autocomplete="off" maxlength="24">
+        <input type="tel" id="regPhone" placeholder="手机号（选填）" autocomplete="off" maxlength="11">
+        <div class="pwd-wrap">
+          <input type="password" id="regPassword" placeholder="请设置密码（至少6位）" autocomplete="new-password" maxlength="32">
+          <button class="toggle-pwd-btn" onclick="toggleRegPwd()" tabindex="-1">
+            <svg id="regPwdIcon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#999" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <button class="btn-login-submit" id="btnRegSubmit" onclick="doRegister()">注册并登录</button>
+        <div class="login-links">
+          <span></span>
+          <span class="login-link" onclick="switchLoginView('login')">已有账号？去登录</span>
+        </div>
+        <div class="login-error" id="loginErrorMsg" style="display:none;"></div>
+      </div>
+
+      <!-- 底部提示 -->
+      <p class="login-footer-hint">内测 2.1 · 云端账号同步</p>
+    </div>
+  </div>
+
+  <!-- 协议页面覆盖层 -->
+  <div class="agreement-page-overlay" id="agreementPageOverlay" style="display:none;">
+    <div class="agreement-page">
+      <div class="agreement-page-header">
+        <button class="btn-back" onclick="closeAgreementPage()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          返回
+        </button>
+        <h2 id="agreementPageTitle">轻印用户协议</h2>
+      </div>
+      <div class="agreement-page-body" id="agreementPageBody"></div>
+    </div>
+  </div>
+
+  <!-- html2canvas 用于导出图片 -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <!-- Leaflet 地图库 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
