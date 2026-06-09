@@ -54,6 +54,35 @@ export default {
         return await handleExplore(env, corsHeaders);
       }
 
+      // ═══════════════════════════════════════════
+      // 管理后台 API
+      // ═══════════════════════════════════════════
+
+      // ── 管理员登录 POST /api/admin/login ──
+      if (path === '/api/admin/login' && request.method === 'POST') {
+        return await handleAdminLogin(request, env, corsHeaders);
+      }
+
+      // ── 获取所有用户 GET /api/admin/users ──
+      if (path === '/api/admin/users' && request.method === 'GET') {
+        return await handleAdminUsers(request, env, corsHeaders);
+      }
+
+      // ── 获取统计数据 GET /api/admin/stats ──
+      if (path === '/api/admin/stats' && request.method === 'GET') {
+        return await handleAdminStats(request, env, corsHeaders);
+      }
+
+      // ── 删除用户 DELETE /api/admin/users ──
+      if (path === '/api/admin/users' && request.method === 'DELETE') {
+        return await handleAdminDeleteUser(request, env, corsHeaders);
+      }
+
+      // ── 清空所有用户 DELETE /api/admin/clear-all ──
+      if (path === '/api/admin/clear-all' && request.method === 'DELETE') {
+        return await handleAdminClearAll(request, env, corsHeaders);
+      }
+
       return new Response(JSON.stringify({ error: 'Not Found' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -297,6 +326,199 @@ async function ensureSecurityColumns(env, username) {
   try {
     await env.DB.prepare('ALTER TABLE Users ADD COLUMN security_answer TEXT DEFAULT NULL').run();
   } catch(e) { /* 列已存在则忽略 */ }
+}
+
+// ═══════════════════════════════════════════
+// 管理后台处理函数
+// ═══════════════════════════════════════════
+
+const ADMIN_SECRET = 'qingyin_admin_secret_2024';
+
+async function generateAdminToken() {
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const payload = btoa(JSON.stringify({
+    sub: 0,
+    username: 'admin',
+    role: 'admin',
+    iat: Date.now(),
+    exp: Date.now() + 24 * 3600 * 1000, // 24小时过期
+  }));
+  const signature = btoa(
+    Array.from(new Uint8Array(
+      await crypto.subtle.digest('SHA-256',
+        new TextEncoder().encode(`${header}.${payload}.${ADMIN_SECRET}`)
+      ))
+    ).map(b => b.toString(16).padStart(2, '0')).join('')
+  );
+  return `${header}.${payload}.${signature}`;
+}
+
+function verifyAdminToken(token) {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(atob(parts[1]));
+    if (payload.role !== 'admin') return null;
+    if (payload.exp && payload.exp < Date.now()) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+function requireAdmin(request) {
+  const authHeader = request.headers.get('Authorization') || '';
+  const token = authHeader.replace('Bearer ', '');
+  return verifyAdminToken(token);
+}
+
+// ── 管理员登录 ──
+async function handleAdminLogin(request, env, corsHeaders) {
+  const { password } = await request.json();
+  // 管理员密码：优先从环境变量 ADMIN_PASSWORD 读取，否则使用默认值
+  const adminPassword = env.ADMIN_PASSWORD || 'qingyin2024admin';
+  if (!password || password !== adminPassword) {
+    return json({ error: '管理员密码错误' }, 401, corsHeaders);
+  }
+  const token = await generateAdminToken();
+  return json({ ok: true, token, message: '管理员登录成功' }, 200, corsHeaders);
+}
+
+// ── 获取所有用户 ──
+async function handleAdminUsers(request, env, corsHeaders) {
+  const admin = requireAdmin(request);
+  if (!admin) {
+    return json({ error: '未授权访问' }, 401, corsHeaders);
+  }
+
+  const url = new URL(request.url);
+  const search = url.searchParams.get('search') || '';
+  const page = parseInt(url.searchParams.get('page') || '1');
+  const limit = parseInt(url.searchParams.get('limit') || '20');
+  const offset = (page - 1) * limit;
+
+  let query, countQuery, params;
+  if (search) {
+    query = 'SELECT id, username, nickname, created_at, updated_at FROM Users WHERE username LIKE ? ORDER BY id DESC LIMIT ? OFFSET ?';
+    countQuery = 'SELECT COUNT(*) as total FROM Users WHERE username LIKE ?';
+    params = [`%${search}%`, limit, offset];
+  } else {
+    query = 'SELECT id, username, nickname, created_at, updated_at FROM Users ORDER BY id DESC LIMIT ? OFFSET ?';
+    countQuery = 'SELECT COUNT(*) as total FROM Users';
+    params = [limit, offset];
+  }
+
+  const usersResult = await env.DB.prepare(query).bind(...params).all();
+  const countResult = search
+    ? await env.DB.prepare(countQuery).bind(`%${search}%`).first()
+    : await env.DB.prepare(countQuery).first();
+
+  return json({
+    ok: true,
+    users: usersResult.results || [],
+    total: countResult ? countResult.total : 0,
+    page,
+    limit,
+  }, 200, corsHeaders);
+}
+
+// ── 获取统计数据 ──
+async function handleAdminStats(request, env, corsHeaders) {
+  const admin = requireAdmin(request);
+  if (!admin) {
+    return json({ error: '未授权访问' }, 401, corsHeaders);
+  }
+
+  // 总用户数
+  const totalResult = await env.DB.prepare('SELECT COUNT(*) as total FROM Users').first();
+
+  // 今日注册
+  const todayResult = await env.DB.prepare(
+    "SELECT COUNT(*) as total FROM Users WHERE date(created_at) = date('now')"
+  ).first();
+
+  // 本周注册
+  const weekResult = await env.DB.prepare(
+    "SELECT COUNT(*) as total FROM Users WHERE created_at >= datetime('now', '-7 days')"
+  ).first();
+
+  // 本月注册
+  const monthResult = await env.DB.prepare(
+    "SELECT COUNT(*) as total FROM Users WHERE created_at >= datetime('now', '-30 days')"
+  ).first();
+
+  // 最近7天每日注册数
+  const dailyResult = await env.DB.prepare(
+    "SELECT date(created_at) as date, COUNT(*) as count FROM Users WHERE created_at >= datetime('now', '-7 days') GROUP BY date(created_at) ORDER BY date(created_at) ASC"
+  ).all();
+
+  // 最近注册的10个用户
+  const recentResult = await env.DB.prepare(
+    'SELECT id, username, nickname, created_at FROM Users ORDER BY id DESC LIMIT 10'
+  ).all();
+
+  return json({
+    ok: true,
+    stats: {
+      total: totalResult ? totalResult.total : 0,
+      today: todayResult ? todayResult.total : 0,
+      week: weekResult ? weekResult.total : 0,
+      month: monthResult ? monthResult.total : 0,
+      daily: dailyResult.results || [],
+      recent: recentResult.results || [],
+    },
+  }, 200, corsHeaders);
+}
+
+// ── 删除用户 ──
+async function handleAdminDeleteUser(request, env, corsHeaders) {
+  const admin = requireAdmin(request);
+  if (!admin) {
+    return json({ error: '未授权访问' }, 401, corsHeaders);
+  }
+
+  const url = new URL(request.url);
+  const userId = url.searchParams.get('id');
+  const username = url.searchParams.get('username');
+
+  if (!userId && !username) {
+    return json({ error: '请提供用户ID或用户名' }, 400, corsHeaders);
+  }
+
+  let target;
+  if (userId) {
+    target = await env.DB.prepare('SELECT id, username FROM Users WHERE id = ?').bind(parseInt(userId)).first();
+  } else {
+    target = await env.DB.prepare('SELECT id, username FROM Users WHERE username = ?').bind(username).first();
+  }
+
+  if (!target) {
+    return json({ error: '用户不存在' }, 404, corsHeaders);
+  }
+
+  await env.DB.prepare('DELETE FROM Users WHERE id = ?').bind(target.id).run();
+
+  return json({ ok: true, message: `用户「${target.username}」已删除`, deleted: target }, 200, corsHeaders);
+}
+
+// ── 清空所有用户 ──
+async function handleAdminClearAll(request, env, corsHeaders) {
+  const admin = requireAdmin(request);
+  if (!admin) {
+    return json({ error: '未授权访问' }, 401, corsHeaders);
+  }
+
+  // 先统计数量
+  const countResult = await env.DB.prepare('SELECT COUNT(*) as total FROM Users').first();
+  const total = countResult ? countResult.total : 0;
+
+  if (total === 0) {
+    return json({ ok: true, message: '数据库中没有用户数据', deleted: 0 }, 200, corsHeaders);
+  }
+
+  await env.DB.prepare('DELETE FROM Users').run();
+
+  return json({ ok: true, message: `已清空全部 ${total} 个用户`, deleted: total }, 200, corsHeaders);
 }
 
 function json(data, status = 200, headers = {}) {

@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>轻印 · 管理后台</title>
+<style>
+/* ═══════════════════════════════════════════ */
+/* 管理后台 - 全局样式 */
+/* ═══════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#6366F1;--primary-light:#818CF8;--primary-dark:#4F46E5;
+  --success:#10B981;--danger:#EF4444;--warning:#F59E0B;
+  --bg:#F1F5F9;--sidebar-bg:#1E293B;--sidebar-hover:#334155;
+  --card-bg:#FFFFFF;--text:#1E293B;--text-muted:#64748B;--border:#E2E8F0;
+  --radius:12px;--radius-sm:8px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+
+/* ═══════════════════════════════════════════ */
+/* 登录页 */
+/* ═══════════════════════════════════════════ */
+.login-page{
+  display:flex;align-items:center;justify-content:center;
+  width:100%;min-height:100vh;background:linear-gradient(135deg, var(--primary-dark), var(--primary));
+}
+.login-card{
+  background:var(--card-bg);border-radius:16px;padding:48px 40px;
+  width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.15);
+}
+.login-card h1{font-size:28px;font-weight:700;text-align:center;color:var(--text);margin-bottom:8px;}
+.login-card .subtitle{text-align:center;color:var(--text-muted);font-size:14px;margin-bottom:32px;}
+.login-card label{display:block;font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px;}
+.login-card input{
+  width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:var(--radius-sm);
+  font-size:15px;outline:none;transition:border-color .2s;
+}
+.login-card input:focus{border-color:var(--primary);}
+.login-card button{
+  width:100%;padding:14px;background:var(--primary);color:#fff;border:none;
+  border-radius:var(--radius-sm);font-size:16px;font-weight:600;cursor:pointer;
+  margin-top:20px;transition:background .2s;
+}
+.login-card button:hover{background:var(--primary-dark);}
+.login-card button:disabled{opacity:.6;cursor:not-allowed;}
+.login-card .error-msg{color:var(--danger);font-size:13px;text-align:center;margin-top:12px;display:none;}
+
+/* ═══════════════════════════════════════════ */
+/* 主布局 */
+/* ═══════════════════════════════════════════ */
+.app-layout{display:flex;width:100%;display:none;}
+
+/* 侧边栏 */
+.sidebar{
+  width:240px;min-height:100vh;background:var(--sidebar-bg);
+  display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;
+  z-index:100;transition:transform .3s;
+}
+.sidebar-brand{
+  padding:24px 20px;display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.sidebar-brand .logo{
+  width:36px;height:36px;background:var(--primary);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;
+}
+.sidebar-brand h2{font-size:18px;color:#fff;font-weight:700;}
+.sidebar-nav{flex:1;padding:12px 0;}
+.sidebar-nav a{
+  display:flex;align-items:center;gap:12px;padding:12px 20px;
+  color:#94A3B8;text-decoration:none;font-size:14px;font-weight:500;
+  transition:all .2s;border-left:3px solid transparent;
+}
+.sidebar-nav a:hover{color:#fff;background:var(--sidebar-hover);}
+.sidebar-nav a.active{
+  color:#fff;background:rgba(99,102,241,.15);
+  border-left-color:var(--primary);
+}
+.sidebar-nav a svg{width:20px;height:20px;flex-shrink:0;}
+.sidebar-footer{
+  padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);
+}
+.sidebar-footer button{
+  width:100%;padding:10px;background:transparent;border:1px solid rgba(255,255,255,.15);
+  color:#94A3B8;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;
+  transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.sidebar-footer button:hover{background:rgba(239,68,68,.15);border-color:var(--danger);color:var(--danger);}
+
+/* 主内容区 */
+.main-content{flex:1;margin-left:240px;padding:32px;}
+.page-header{margin-bottom:28px;}
+.page-header h2{font-size:24px;font-weight:700;margin-bottom:4px;}
+.page-header p{color:var(--text-muted);font-size:14px;}
+
+/* 统计卡片 */
+.stats-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:16px;margin-bottom:28px;
+}
+.stat-card{
+  background:var(--card-bg);border-radius:var(--radius);padding:20px 24px;
+  box-shadow:0 1px 3px rgba(0,0,0,.04);border:1px solid var(--border);
+}
+.stat-card .stat-icon{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;margin-bottom:12px;
+}
+.stat-card .stat-icon.blue{background:rgba(99,102,241,.1);color:var(--primary);}
+.stat-card .stat-icon.green{background:rgba(16,185,129,.1);color:var(--success);}
+.stat-card .stat-icon.amber{background:rgba(245,158,11,.1);color:var(--warning);}
+.stat-card .stat-icon.red{background:rgba(239,68,68,.1);color:var(--danger);}
+.stat-card .stat-value{font-size:32px;font-weight:700;line-height:1.2;}
+.stat-card .stat-label{font-size:13px;color:var(--text-muted);margin-top:4px;}
+
+/* 表格 */
+.card{
+  background:var(--card-bg);border-radius:var(--radius);
+  box-shadow:0 1px 3px rgba(0,0,0,.04);border:1px solid var(--border);
+  margin-bottom:20px;overflow:hidden;
+}
+.card-header{
+  padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+}
+.card-header h3{font-size:16px;font-weight:600;}
+.card-body{padding:0;}
+
+/* 搜索栏 */
+.search-bar{display:flex;gap:8px;}
+.search-bar input{
+  padding:8px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  font-size:13px;outline:none;width:200px;transition:border-color .2s;
+}
+.search-bar input:focus{border-color:var(--primary);}
+.search-bar button{
+  padding:8px 16px;background:var(--primary);color:#fff;border:none;
+  border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;transition:background .2s;
+}
+.search-bar button:hover{background:var(--primary-dark);}
+
+/* 用户表格 */
+.user-table{width:100%;border-collapse:collapse;}
+.user-table th{
+  text-align:left;padding:12px 20px;font-size:12px;font-weight:600;
+  color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;
+  background:#F8FAFC;border-bottom:1px solid var(--border);
+}
+.user-table td{
+  padding:14px 20px;font-size:14px;border-bottom:1px solid var(--border);
+  color:var(--text);vertical-align:middle;
+}
+.user-table tbody tr:hover{background:#F8FAFC;}
+.user-table .user-cell{display:flex;align-items:center;gap:10px;}
+.user-table .user-avatar{
+  width:32px;height:32px;border-radius:50%;background:var(--primary);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:600;flex-shrink:0;
+}
+.user-table .user-name{font-weight:600;}
+.user-table .user-nickname{color:var(--text-muted);font-size:12px;}
+.user-table .empty-state{padding:48px;text-align:center;color:var(--text-muted);}
+
+/* 操作按钮 */
+.btn-sm{
+  padding:6px 14px;border:none;border-radius:6px;font-size:12px;
+  font-weight:500;cursor:pointer;transition:all .2s;
+}
+.btn-danger{background:rgba(239,68,68,.1);color:var(--danger);}
+.btn-danger:hover{background:var(--danger);color:#fff;}
+.btn-outline{
+  background:transparent;border:1px solid var(--border);color:var(--text-muted);
+}
+.btn-outline:hover{border-color:var(--primary);color:var(--primary);}
+
+/* 分页 */
+.pagination{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:16px 20px;border-top:1px solid var(--border);
+}
+.pagination button{
+  padding:6px 14px;border:1px solid var(--border);background:var(--card-bg);
+  border-radius:6px;font-size:13px;cursor:pointer;transition:all .2s;
+}
+.pagination button:hover:not(:disabled){border-color:var(--primary);color:var(--primary);}
+.pagination button:disabled{opacity:.4;cursor:not-allowed;}
+.pagination .page-info{font-size:13px;color:var(--text-muted);}
+
+/* Toast */
+.toast{
+  position:fixed;top:20px;right:20px;padding:14px 24px;border-radius:var(--radius-sm);
+  color:#fff;font-size:14px;font-weight:500;z-index:9999;
+  transform:translateX(120%);transition:transform .3s ease;
+  box-shadow:0 4px 20px rgba(0,0,0,.15);
+}
+.toast.show{transform:translateX(0);}
+.toast.success{background:var(--success);}
+.toast.error{background:var(--danger);}
+.toast.info{background:var(--primary);}
+
+/* 模态框 */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
+  z-index:1000;align-items:center;justify-content:center;
+}
+.modal-overlay.active{display:flex;}
+.modal{
+  background:var(--card-bg);border-radius:16px;padding:28px;
+  width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2);
+}
+.modal h3{font-size:18px;font-weight:700;margin-bottom:8px;}
+.modal p{color:var(--text-muted);font-size:14px;margin-bottom:20px;line-height:1.6;}
+.modal .modal-actions{display:flex;gap:10px;justify-content:flex-end;}
+.modal .modal-actions button{
+  padding:10px 24px;border:none;border-radius:8px;font-size:14px;
+  font-weight:500;cursor:pointer;transition:all .2s;
+}
+.modal .btn-cancel{background:var(--bg);color:var(--text);}
+.modal .btn-cancel:hover{background:var(--border);}
+.modal .btn-confirm{background:var(--danger);color:#fff;}
+.modal .btn-confirm:hover{background:#DC2626;}
+
+/* 响应式 */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .main-content{margin-left:0;padding:20px;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .user-table{display:block;overflow-x:auto;}
+  .search-bar input{width:140px;}
+  .mobile-menu-btn{
+    display:flex!important;position:fixed;top:14px;left:14px;z-index:200;
+    width:36px;height:36px;align-items:center;justify-content:center;
+    background:var(--card-bg);border:1px solid var(--border);border-radius:8px;
+    cursor:pointer;font-size:18px;
+  }
+}
+@media(min-width:769px){.mobile-menu-btn{display:none!important;}}
+
+/* 图表简化 */
+.chart-bars{display:flex;align-items:flex-end;gap:12px;height:140px;padding:20px;}
+.chart-bar-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.chart-bar{
+  width:100%;max-width:40px;background:var(--primary);
+  border-radius:6px 6px 0 0;transition:height .5s ease;min-height:4px;
+}
+.chart-bar-label{font-size:11px;color:var(--text-muted);}
+.chart-bar-value{font-size:12px;font-weight:600;color:var(--primary);}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- 登录页面 -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="login-page" id="loginPage">
+  <div class="login-card">
+    <h1>轻印 · 后台管理</h1>
+    <p class="subtitle">请输入管理员密码以继续</p>
+    <label for="adminPwd">管理员密码</label>
+    <input type="password" id="adminPwd" placeholder="请输入管理员密码" autocomplete="off" onkeydown="if(event.key==='Enter')doAdminLogin()">
+    <button onclick="doAdminLogin()" id="btnAdminLogin">登录后台</button>
+    <p class="error-msg" id="loginError"></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- 主布局 -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="app-layout" id="appLayout">
+  <!-- 移动端菜单按钮 -->
+  <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+
+  <!-- 侧边栏 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">轻</div>
+      <h2>后台管理</h2>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="active" data-page="dashboard" onclick="switchPage('dashboard',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        仪表盘
+      </a>
+      <a href="#" data-page="users" onclick="switchPage('users',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        用户管理
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <button onclick="doAdminLogout()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        退出登录
+      </button>
+    </div>
+  </aside>
+
+  <!-- 主内容区 -->
+  <main class="main-content" id="mainContent">
+    <!-- ══════════ 仪表盘 ══════════ -->
+    <div id="page-dashboard" class="page-content">
+      <div class="page-header">
+        <h2>仪表盘</h2>
+        <p>轻印产品数据概览</p>
+      </div>
+      <div class="stats-grid" id="statsGrid">
+        <!-- 动态填充 -->
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>近7天注册趋势</h3></div>
+        <div class="chart-bars" id="chartBars">
+          <p style="padding:20px;color:var(--text-muted)">加载中...</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>最近注册用户</h3></div>
+        <div class="card-body" style="overflow-x:auto;">
+          <table class="user-table">
+            <thead><tr><th>ID</th><th>用户名</th><th>昵称</th><th>注册时间</th></tr></thead>
+            <tbody id="recentUsersTbody"><tr><td class="empty-state" colspan="4">加载中...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ 用户管理 ══════════ -->
+    <div id="page-users" class="page-content" style="display:none;">
+      <div class="page-header">
+        <h2>用户管理</h2>
+        <p>查看、搜索和管理所有注册用户</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>用户列表 <span style="font-weight:400;color:var(--text-muted);font-size:13px;" id="userCountLabel"></span></h3>
+          <div class="search-bar">
+            <input type="text" id="userSearch" placeholder="搜索用户名..." onkeydown="if(event.key==='Enter')searchUsers()">
+            <button onclick="searchUsers()">搜索</button>
+            <button class="btn-outline btn-sm" onclick="clearSearch()">清除</button>
+            <button class="btn-sm btn-danger" onclick="showClearAllModal()" style="margin-left:8px;">清空全部数据</button>
+          </div>
+        </div>
+        <div class="card-body" style="overflow-x:auto;">
+          <table class="user-table">
+            <thead>
+              <tr>
+                <th>ID</th><th>用户</th><th>注册时间</th><th>更新时间</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="allUsersTbody"><tr><td class="empty-state" colspan="5">加载中...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="userPagination"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- Toast -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- 清空确认模态框 -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="clearAllModal">
+  <div class="modal">
+    <h3>⚠️ 清空全部用户数据</h3>
+    <p>此操作将<strong>永久删除</strong>数据库中的所有用户账号、密码、密保数据。<br><br>此操作<strong>不可撤销</strong>，删除后用户将无法登录。确定要继续吗？</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('clearAllModal')">取消</button>
+      <button class="btn-confirm" onclick="confirmClearAll()">确认清空全部数据</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- 删除用户确认模态框 -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="deleteUserModal">
+  <div class="modal">
+    <h3>删除用户</h3>
+    <p>确定要删除用户「<strong id="deleteUserName"></strong>」吗？<br><br>此操作将永久删除该用户的账号和所有数据，<strong>不可撤销</strong>。</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('deleteUserModal')">取消</button>
+      <button class="btn-confirm" id="btnConfirmDelete" onclick="confirmDeleteUser()">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- JavaScript -->
+<!-- ═══════════════════════════════════════════ -->
+<script>
+// API 配置
+const API_BASE = '/api';
+let adminToken = localStorage.getItem('qingyin_admin_token');
+let currentPage = 'dashboard';
+let userPage = 1, userSearch = '';
+
+// 页面加载
+document.addEventListener('DOMContentLoaded', function() {
+  if (adminToken) {
+    checkAdminAuth();
+  }
+});
+
+// ═══════════════════════════════════════════
+// 登录
+// ═══════════════════════════════════════════
+async function doAdminLogin() {
+  const pwd = document.getElementById('adminPwd').value;
+  const btn = document.getElementById('btnAdminLogin');
+  const errEl = document.getElementById('loginError');
+
+  if (!pwd) { showLoginError('请输入管理员密码'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '登录中...';
+  errEl.style.display = 'none';
+
+  try {
+    const res = await fetch(API_BASE + '/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pwd })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      adminToken = data.token;
+      localStorage.setItem('qingyin_admin_token', adminToken);
+      showApp();
+    } else {
+      showLoginError(data.error || '密码错误');
+    }
+  } catch(e) {
+    showLoginError('网络连接失败，请稍后重试');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '登录后台';
+  }
+}
+
+function showLoginError(msg) {
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = msg;
+  errEl.style.display = 'block';
+}
+
+// ═══════════════════════════════════════════
+// 鉴权检查
+// ═══════════════════════════════════════════
+async function checkAdminAuth() {
+  try {
+    const res = await fetch(API_BASE + '/admin/stats', {
+      headers: { 'Authorization': 'Bearer ' + adminToken }
+    });
+    if (res.ok) {
+      showApp();
+    } else {
+      localStorage.removeItem('qingyin_admin_token');
+      adminToken = null;
+    }
+  } catch(e) {
+    // 网络错误，假设 token 有效（离线使用）
+    showApp();
+  }
+}
+
+function showApp() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('appLayout').style.display = 'flex';
+  loadDashboard();
+}
+
+// ═══════════════════════════════════════════
+// 页面切换
+// ═══════════════════════════════════════════
+function switchPage(page, el) {
+  currentPage = page;
+  // 更新侧边栏 active
+  document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+  if (el) el.classList.add('active');
+  // 显示/隐藏内容
+  document.querySelectorAll('.page-content').forEach(p => p.style.display = 'none');
+  document.getElementById('page-' + page).style.display = 'block';
+  // 关闭移动端侧边栏
+  document.getElementById('sidebar').classList.remove('open');
+
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'users') { userPage = 1; loadUsers(); }
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════
+// 仪表盘
+// ═══════════════════════════════════════════
+async function loadDashboard() {
+  try {
+    const res = await fetch(API_BASE + '/admin/stats', {
+      headers: { 'Authorization': 'Bearer ' + adminToken }
+    });
+    if (res.status === 401) { handleAuthExpired(); return; }
+    const data = await res.json();
+    if (data.ok) {
+      renderStats(data.stats);
+      renderChart(data.stats.daily);
+      renderRecentUsers(data.stats.recent);
+    }
+  } catch(e) {
+    showToast('加载统计数据失败', 'error');
+  }
+}
+
+function renderStats(stats) {
+  document.getElementById('statsGrid').innerHTML = [
+    { icon:'blue', label:'总用户数', value:stats.total, svg:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/>' },
+    { icon:'green', label:'今日新增', value:stats.today, svg:'<path d="M12 20v-6M9 17l3-3 3 3"/><circle cx="12" cy="12" r="10"/>' },
+    { icon:'amber', label:'本周新增', value:stats.week, svg:'<path d="M3 3v18h18"/><path d="M7 16l4-8 4 4 4-6"/>' },
+    { icon:'red', label:'本月新增', value:stats.month, svg:'<path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path d="M12 7v5l3 3"/>' }
+  ].map(function(s) {
+    return '<div class="stat-card"><div class="stat-icon '+s.icon+'"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+s.svg+'</svg></div><div class="stat-value">'+s.value+'</div><div class="stat-label">'+s.label+'</div></div>';
+  }).join('');
+}
+
+function renderChart(daily) {
+  const container = document.getElementById('chartBars');
+  if (!daily || daily.length === 0) {
+    container.innerHTML = '<p style="padding:20px;color:var(--text-muted);text-align:center;">暂无注册数据</p>';
+    return;
+  }
+  const maxVal = Math.max.apply(null, daily.map(function(d) { return d.count; })) || 1;
+  container.innerHTML = daily.map(function(d) {
+    var h = Math.max(4, (d.count / maxVal) * 100);
+    var dateParts = d.date.split('-');
+    var label = dateParts.length >= 3 ? dateParts[1] + '/' + dateParts[2] : d.date;
+    return '<div class="chart-bar-item"><div class="chart-bar-value">'+d.count+'</div><div class="chart-bar" style="height:'+h+'px;"></div><div class="chart-bar-label">'+label+'</div></div>';
+  }).join('');
+}
+
+function renderRecentUsers(users) {
+  var tbody = document.getElementById('recentUsersTbody');
+  if (!users || users.length === 0) {
+    tbody.innerHTML = '<tr><td class="empty-state" colspan="4">暂无注册用户</td></tr>';
+    return;
+  }
+  tbody.innerHTML = users.map(function(u) {
+    return '<tr><td>#'+u.id+'</td><td><div class="user-cell"><div class="user-avatar">'+u.username.charAt(0).toUpperCase()+'</div><div><div class="user-name">'+escapeHtml(u.username)+'</div></div></div></td><td>'+escapeHtml(u.nickname||'-')+'</td><td>'+formatDate(u.created_at)+'</td></tr>';
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// 用户管理
+// ═══════════════════════════════════════════
+async function loadUsers() {
+  try {
+    var params = '?page=' + userPage + '&limit=20';
+    if (userSearch) params += '&search=' + encodeURIComponent(userSearch);
+
+    var res = await fetch(API_BASE + '/admin/users' + params, {
+      headers: { 'Authorization': 'Bearer ' + adminToken }
+    });
+    if (res.status === 401) { handleAuthExpired(); return; }
+    var data = await res.json();
+
+    if (data.ok) {
+      renderUserTable(data.users);
+      renderPagination(data.total, data.page, data.limit);
+      document.getElementById('userCountLabel').textContent = '（共 ' + data.total + ' 人）';
+    }
+  } catch(e) {
+    showToast('加载用户列表失败', 'error');
+  }
+}
+
+function renderUserTable(users) {
+  var tbody = document.getElementById('allUsersTbody');
+  if (!users || users.length === 0) {
+    tbody.innerHTML = '<tr><td class="empty-state" colspan="5">' + (userSearch ? '未找到匹配的用户' : '暂无注册用户') + '</td></tr>';
+    return;
+  }
+  tbody.innerHTML = users.map(function(u) {
+    return '<tr>' +
+      '<td>#' + u.id + '</td>' +
+      '<td><div class="user-cell"><div class="user-avatar">' + u.username.charAt(0).toUpperCase() + '</div><div><div class="user-name">' + escapeHtml(u.username) + '</div><div class="user-nickname">' + escapeHtml(u.nickname || '') + '</div></div></div></td>' +
+      '<td>' + formatDate(u.created_at) + '</td>' +
+      '<td>' + formatDate(u.updated_at) + '</td>' +
+      '<td><button class="btn-sm btn-danger" onclick="showDeleteModal(' + u.id + ',\'' + escapeHtml(u.username).replace(/'/g, "\\'") + '\')">删除</button></td>' +
+      '</tr>';
+  }).join('');
+}
+
+function renderPagination(total, page, limit) {
+  var container = document.getElementById('userPagination');
+  var totalPages = Math.ceil(total / limit);
+  if (totalPages <= 1) {
+    container.innerHTML = total > 0 ? '<div class="page-info">共 ' + total + ' 条记录</div>' : '';
+    return;
+  }
+  var html = '<button ' + (page <= 1 ? 'disabled' : '') + ' onclick="goPage(' + (page-1) + ')">上一页</button>';
+  html += '<span class="page-info">第 ' + page + ' / ' + totalPages + ' 页（共 ' + total + ' 条）</span>';
+  html += '<button ' + (page >= totalPages ? 'disabled' : '') + ' onclick="goPage(' + (page+1) + ')">下一页</button>';
+  container.innerHTML = html;
+}
+
+function goPage(p) { userPage = p; loadUsers(); }
+function searchUsers() { userSearch = document.getElementById('userSearch').value.trim(); userPage = 1; loadUsers(); }
+function clearSearch() { document.getElementById('userSearch').value = ''; userSearch = ''; userPage = 1; loadUsers(); }
+
+// ═══════════════════════════════════════════
+// 删除&清空
+// ═══════════════════════════════════════════
+var deleteUserId = null;
+
+function showDeleteModal(id, name) {
+  deleteUserId = id;
+  document.getElementById('deleteUserName').textContent = name;
+  document.getElementById('deleteUserModal').classList.add('active');
+}
+
+async function confirmDeleteUser() {
+  if (!deleteUserId) return;
+  closeModal('deleteUserModal');
+  try {
+    var res = await fetch(API_BASE + '/admin/users?id=' + deleteUserId, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + adminToken }
+    });
+    var data = await res.json();
+    if (data.ok) {
+      showToast(data.message, 'success');
+      loadUsers();
+      loadDashboard();
+    } else {
+      showToast(data.error || '删除失败', 'error');
+    }
+  } catch(e) {
+    showToast('网络连接失败', 'error');
+  }
+  deleteUserId = null;
+}
+
+function showClearAllModal() {
+  document.getElementById('clearAllModal').classList.add('active');
+}
+
+async function confirmClearAll() {
+  closeModal('clearAllModal');
+  try {
+    var res = await fetch(API_BASE + '/admin/clear-all', {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + adminToken }
+    });
+    var data = await res.json();
+    if (data.ok) {
+      showToast(data.message, 'success');
+      loadUsers();
+      loadDashboard();
+    } else {
+      showToast(data.error || '清空失败', 'error');
+    }
+  } catch(e) {
+    showToast('网络连接失败', 'error');
+  }
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+// ═══════════════════════════════════════════
+// 退出
+// ═══════════════════════════════════════════
+function doAdminLogout() {
+  localStorage.removeItem('qingyin_admin_token');
+  adminToken = null;
+  document.getElementById('appLayout').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('adminPwd').value = '';
+  document.getElementById('loginError').style.display = 'none';
+}
+
+function handleAuthExpired() {
+  showToast('登录已过期，请重新登录', 'error');
+  setTimeout(doAdminLogout, 1500);
+}
+
+// ═══════════════════════════════════════════
+// 工具函数
+// ═══════════════════════════════════════════
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (type || 'info') + ' show';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '-';
+  try {
+    var d = new Date(dateStr.replace(' ', 'T') + (dateStr.includes('Z') ? '' : 'Z'));
+    if (isNaN(d.getTime())) return dateStr;
+    return d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0') + ' ' +
+      String(d.getHours()).padStart(2, '0') + ':' +
+      String(d.getMinutes()).padStart(2, '0');
+  } catch(e) { return dateStr; }
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  var div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+</body>
+</html>

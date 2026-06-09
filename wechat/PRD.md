@@ -378,14 +378,16 @@
 | Vercel 部署 | `npm run build` (Vue) | 静态文件直出 |
 | .gitignore | wechat/ 被忽略 | wechat/ 已纳入版本管理 |
 | 注册字段 | 用户名 + 手机号 + 密码 | 用户名 + 密码 + 密保问题 |
-| API 接口数 | 4 个 | 6 个（新增忘记密码/重置密码） |
+| API 接口数 | 4 个 | 11 个（注册/登录/鉴权/忘记密码/重置密码/探索 + 管理后台5个端点） |
 
 #### 🔗 部署信息（更新）
 
-- [x] **Vercel 前端部署**：`https://20260603112143.vercel.app`（自动部署，已切换为静态文件）
+- [x] **Vercel 前端部署**：`https://20260603112143.vercel.app`（自动部署）
+- [x] **Vercel 管理后台**：`https://20260603112143.vercel.app/admin/`
 - [x] **CloudBase 镜像部署**：`https://ai-native-d5gv1bzqle900971e-1439954016.tcloudbaseapp.com/`
+- [x] **CloudBase 管理后台**：`https://ai-native-d5gv1bzqle900971e-1439954016.tcloudbaseapp.com/admin/`
 - [x] **Worker 后端地址**：`https://qingyin-api.w3223604721.workers.dev`
-- [x] **D1 数据库**：`qingyin-db`（Asia Pacific 区域，Users 表已创建并索引，含 security_question/security_answer 列）
+- [x] **管理员默认密码**：`qingyin2024admin`（可在 Cloudflare Workers 环境变量 `ADMIN_PASSWORD` 中修改）
 
 #### 📁 修改文件（2026-06-09）
 
@@ -394,8 +396,10 @@
 | `wechat/index.html` | 修改 | 删除手机号输入框、优化忘记密码视图 HTML、CSS 版本号 v7 |
 | `wechat/script.js` | 修改 | 修复 switchLoginView flex 布局 bug、doRegister 移除 phone、doLogin 统一错误提示、优化忘记密码流程 |
 | `wechat/styles.css` | 修改 | 统一表单 gap 间距、login-overlay !important、协议 z-index 10000 |
-| `worker/index.js` | 修改 | 注册移除 phone 参数、忘记密码改为"账号不存在"、新增密保列自动迁移 |
-| `wechat/PRD.md` | 更新 | 记录 v2.1 完整变更日志 |
+| `wechat/admin/index.html` | **新增** | 管理后台完整单页应用（登录 + 仪表盘 + 用户管理） |
+| `worker/index.js` | 修改 | 注册移除 phone 参数、忘记密码改为"账号不存在"、**新增 5 个管理后台 API 端点**、新增密保列自动迁移 |
+| `vercel.json` | 修改 | 新增 `/admin/` 路由规则 |
+| `wechat/PRD.md` | 更新 | 记录 v2.1 完整变更日志 + 管理后台文档
 
 ---
 
@@ -442,16 +446,14 @@
   - 托管域名：`ai-native-d5gv1bzqle900971e-1439954016.tcloudbaseapp.com`
   - 当前状态：⚠️ 等待用户提供 SSL 证书 ID
 
-#### 🆕 后台管理系统
+#### 🆕 后台管理系统 v2
 
-- [x] **数据看板**：反馈总数/待处理反馈/注册用户/分析事件 四大统计卡片 + 近14天反馈趋势柱状图
-- [x] **反馈管理**：查看/筛选（按状态）/标记已读/标记解决/删除反馈，支持分页
-- [x] **用户管理**：查看注册用户列表，支持搜索（昵称/手机号），可设置/取消管理员角色
-- [x] **数据分析**：事件类型分布条形图 + 近30天活跃趋势 + 最近事件日志表格
-- [x] **反馈云端同步**：小程序 + Web 端提交的反馈自动同步到 CloudBase 数据库（`qingyin_feedback` 集合）
-- [x] **CloudBase 基础设施**：
-  - 数据库集合：`qingyin_feedback` / `qingyin_analytics` / `qingyin_users`
-  - 云函数：`qingyin-admin`（反馈CRUD、数据统计、用户管理）
+- [x] **管理员登录**：独立管理员密码认证，24小时有效管理 Token
+- [x] **仪表盘**：总用户数 / 今日新增 / 本周新增 / 本月新增统计卡片 + 近7天注册趋势柱状图 + 最近注册用户列表
+- [x] **用户管理**：全部用户列表（分页）、用户名搜索、单个用户删除（含二次确认）、一键清空全部用户数据（含二次确认）
+- [x] **Worker API 扩展**：新增 5 个管理端点（`POST /api/admin/login`、`GET /api/admin/users`、`GET /api/admin/stats`、`DELETE /api/admin/users`、`DELETE /api/admin/clear-all`）
+- [x] **部署地址**：`/admin/` 路径（Vercel + CloudBase 双平台同步部署）
+- [x] **UI 设计**：暗色侧边栏 + 亮色内容区，桌面端优先，移动端适配汉堡菜单
 
 #### 📝 文档变更
 
@@ -500,7 +502,13 @@ wechat/
 ├── china_provinces.json    # 中国省份地理数据
 ├── project.config.json     # 微信小程序项目配置
 ├── project.private.config.json  # 私有配置
+├── admin/                  # 管理后台
+│   └── index.html          # 管理后台单页应用
 └── PRD.md                  # 本需求文档
+worker/
+├── index.js                # Cloudflare Workers API 主入口
+├── schema.sql              # D1 数据库初始化 SQL
+└── wrangler.toml           # Wrangler CLI 配置
 ```
 
 ### 8.2 关键依赖
