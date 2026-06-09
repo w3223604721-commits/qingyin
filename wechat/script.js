@@ -79,16 +79,20 @@ async function doLogin() {
 async function doRegister() {
   const username = $('regUsername').value.trim();
   const phone = $('regPhone').value.trim();
+  const securityQuestion = $('regSecurityQ').value;
+  const securityAnswer = $('regSecurityA').value.trim();
   const password = $('regPassword').value;
   if (!username || !password) { showLoginError('用户名和密码不能为空'); return; }
   if (username.length < 5 || username.length > 24) { showLoginError('用户名需要5-24位'); return; }
   if (!/^[a-zA-Z0-9_]+$/.test(username)) { showLoginError('用户名只能包含字母、数字和下划线'); return; }
+  if (!securityQuestion || !securityAnswer) { showLoginError('请选择密保问题并填写答案'); return; }
+  if (securityAnswer.length < 2) { showLoginError('密保答案至少2个字符'); return; }
   if (password.length < 6) { showLoginError('密码至少需要6位'); return; }
   hideLoginError();
   $('btnRegSubmit').disabled = true;
   $('btnRegSubmit').textContent = '注册中...';
   try {
-    const data = await apiCall('/api/register', { username, password, phone: phone || null });
+    const data = await apiCall('/api/register', { username, password, phone: phone || null, securityQuestion, securityAnswer });
     if (data.ok) {
       setToken(data.token);
       localStorage.setItem('qingyin_user', JSON.stringify(data.user));
@@ -106,6 +110,92 @@ async function doRegister() {
   finally { $('btnRegSubmit').disabled = false; $('btnRegSubmit').textContent = '注册并登录'; }
 }
 
+// ── 忘记密码流程 ──
+function showForgotPassword() {
+  switchLoginView('forgot');
+  // 重置忘记密码表单
+  $('fpUsername').value = '';
+  $('fpAnswer').value = '';
+  $('fpNewPwd').value = '';
+  $('fpStep2').style.display = 'none';
+  $('forgotPwdError').style.display = 'none';
+}
+
+async function doQuerySecurity() {
+  const username = $('fpUsername').value.trim();
+  if (!username) {
+    showFpError('请输入用户名');
+    return;
+  }
+  $('btnFpQuery').disabled = true;
+  $('btnFpQuery').textContent = '查询中...';
+  try {
+    const data = await apiCall('/api/forgot-password', { username });
+    if (data.ok) {
+      $('fpQuestionText').textContent = '密保问题：' + data.securityQuestion;
+      $('fpStep2').style.display = 'block';
+      $('btnFpQuery').textContent = '已确认';
+      $('btnFpQuery').disabled = true;
+      $('fpUsername').disabled = true;
+      $('forgotPwdError').style.display = 'none';
+    } else {
+      showFpError(data.error || '查询失败');
+    }
+  } catch(e) { showFpError('网络连接失败，请稍后重试'); }
+  finally { if (!$('btnFpQuery').disabled) { $('btnFpQuery').disabled = false; $('btnFpQuery').textContent = '查询密保问题'; } }
+}
+
+async function doResetPassword() {
+  const username = $('fpUsername').value.trim();
+  const answer = $('fpAnswer').value.trim();
+  const newPwd = $('fpNewPwd').value;
+  if (!answer) { showFpError('请输入密保答案'); return; }
+  if (!newPwd || newPwd.length < 6) { showFpError('新密码至少需要6位'); return; }
+  $('forgotPwdError').style.display = 'none';
+  try {
+    const data = await apiCall('/api/reset-password', { username, securityAnswer: answer, newPassword: newPwd });
+    if (data.ok) {
+      showFpSuccess(data.message || '密码重置成功');
+      // 1.5秒后返回登录
+      setTimeout(function() {
+        $('fpUsername').value = '';
+        $('fpUsername').disabled = false;
+        $('fpStep2').style.display = 'none';
+        switchLoginView('login');
+      }, 1500);
+    } else {
+      showFpError(data.error || '重置失败');
+    }
+  } catch(e) { showFpError('网络连接失败，请稍后重试'); }
+}
+
+function showFpError(msg) {
+  var el = $('forgotPwdError');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.background = '#FFF0F0';
+  el.style.color = '#E74C3C';
+}
+
+function showFpSuccess(msg) {
+  var el = $('forgotPwdError');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.background = '#F0FFF4';
+  el.style.color = '#27AE60';
+}
+
+function toggleFpPwd() {
+  var inp = $('fpNewPwd'), icon = $('fpPwdIcon');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 012 12a10.07 10.07 0 0115.94-5.94M10 16l4-4M16 10l-4 4M19.07 4.93L4.93 19.07" stroke="#6366F1" stroke-width="1.5" stroke-linecap="round"/>';
+  } else {
+    inp.type = 'password';
+    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+
 // 显示/隐藏红色错误提示（自动判断当前表单）
 function showLoginError(msg) {
   var isRegister = $('registerFormView').style.display !== 'none';
@@ -120,13 +210,15 @@ function hideLoginError() {
 
 function switchLoginView(view) {
   hideLoginError();
-  if (view === 'login') {
-    $('loginFormView').style.display = 'block';
-    $('registerFormView').style.display = 'none';
-  } else {
-    $('loginFormView').style.display = 'none';
-    $('registerFormView').style.display = 'block';
-  }
+  hideFpMsg();
+  $('loginFormView').style.display = (view === 'login') ? 'block' : 'none';
+  $('registerFormView').style.display = (view === 'register') ? 'block' : 'none';
+  $('forgotPwdView').style.display = (view === 'forgot') ? 'block' : 'none';
+}
+
+function hideFpMsg() {
+  var el = $('forgotPwdError');
+  if (el) el.style.display = 'none';
 }
 
 function toggleLoginPwd() {

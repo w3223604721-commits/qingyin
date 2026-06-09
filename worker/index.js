@@ -39,6 +39,16 @@ export default {
         return await handleGetMe(request, env, corsHeaders);
       }
 
+      // ── 忘记密码-查询密保问题 POST /api/forgot-password ──
+      if (path === '/api/forgot-password' && request.method === 'POST') {
+        return await handleForgotPassword(request, env, corsHeaders);
+      }
+
+      // ── 重置密码 POST /api/reset-password ──
+      if (path === '/api/reset-password' && request.method === 'POST') {
+        return await handleResetPassword(request, env, corsHeaders);
+      }
+
       // ── 探索数据 GET /api/explore ──
       if (path === '/api/explore' && request.method === 'GET') {
         return await handleExplore(env, corsHeaders);
@@ -118,7 +128,7 @@ function verifyToken(token) {
 // ──────────────────────────────────────────────
 
 async function handleRegister(request, env, corsHeaders) {
-  const { username, phone, password } = await request.json();
+  const { username, phone, password, securityQuestion, securityAnswer } = await request.json();
 
   if (!username || !password) {
     return json({ error: '用户名和密码不能为空' }, 400, corsHeaders);
@@ -132,6 +142,9 @@ async function handleRegister(request, env, corsHeaders) {
   if (!/^[a-zA-Z0-9_]+$/.test(username)) {
     return json({ error: '用户名只能包含字母、数字和下划线' }, 400, corsHeaders);
   }
+  if (!securityQuestion || !securityAnswer) {
+    return json({ error: '请设置密保问题和答案' }, 400, corsHeaders);
+  }
 
   // 检查用户名是否已存在
   const existing = await env.DB.prepare('SELECT id FROM Users WHERE username = ?').bind(username).first();
@@ -139,11 +152,16 @@ async function handleRegister(request, env, corsHeaders) {
     return json({ error: '用户名已被注册' }, 409, corsHeaders);
   }
 
-  // 哈希密码并插入
+  // 哈希密码和密保答案
   const passwordHash = await hashPassword(password);
+  const answerHash = await hashPassword(securityAnswer.trim());
+
+  // 检查数据库是否有密保列，无则自动添加
+  await ensureSecurityColumns(env, username);
+
   await env.DB.prepare(
-    'INSERT INTO Users (username, phone, password_hash, nickname) VALUES (?, ?, ?, ?)'
-  ).bind(username, phone || null, passwordHash, username).run();
+    'INSERT INTO Users (username, phone, password_hash, nickname, security_question, security_answer) VALUES (?, ?, ?, ?, ?, ?)'
+  ).bind(username, phone || null, passwordHash, username, securityQuestion, answerHash).run();
 
   // 获取新用户
   const user = await env.DB.prepare('SELECT id, username, nickname, avatar_url, created_at FROM Users WHERE username = ?').bind(username).first();
@@ -214,6 +232,71 @@ async function handleExplore(env, corsHeaders) {
   ).all();
 
   return json({ ok: true, count: users.results?.length || 0, users: users.results || [] }, 200, corsHeaders);
+}
+
+// ── 忘记密码：根据用户名查询密保问题 ──
+async function handleForgotPassword(request, env, corsHeaders) {
+  const { username } = await request.json();
+  if (!username) {
+    return json({ error: '请输入用户名' }, 400, corsHeaders);
+  }
+
+  const user = await env.DB.prepare(
+    'SELECT id, security_question FROM Users WHERE username = ?'
+  ).bind(username).first();
+
+  if (!user) {
+    return json({ error: '该用户名不存在' }, 404, corsHeaders);
+  }
+  if (!user.security_question) {
+    return json({ error: '该账号未设置密保，无法找回密码' }, 400, corsHeaders);
+  }
+
+  return json({ ok: true, securityQuestion: user.security_question }, 200, corsHeaders);
+}
+
+// ── 重置密码：验证密保答案后更新密码 ──
+async function handleResetPassword(request, env, corsHeaders) {
+  const { username, securityAnswer, newPassword } = await request.json();
+  if (!username || !securityAnswer || !newPassword) {
+    return json({ error: '请填写完整信息' }, 400, corsHeaders);
+  }
+  if (newPassword.length < 6) {
+    return json({ error: '新密码至少需要6位' }, 400, corsHeaders);
+  }
+
+  const user = await env.DB.prepare(
+    'SELECT id, security_answer, security_question FROM Users WHERE username = ?'
+  ).bind(username).first();
+
+  if (!user) {
+    return json({ error: '该用户名不存在' }, 404, corsHeaders);
+  }
+  if (!user.security_question || !user.security_answer) {
+    return json({ error: '该账号未设置密保，无法重置密码' }, 400, corsHeaders);
+  }
+
+  const inputHash = await hashPassword(securityAnswer.trim());
+  if (inputHash !== user.security_answer) {
+    return json({ error: '密保答案错误' }, 401, corsHeaders);
+  }
+
+  const newHash = await hashPassword(newPassword);
+  await env.DB.prepare(
+    'UPDATE Users SET password_hash = ? WHERE id = ?'
+  ).bind(newHash, user.id).run();
+
+  return json({ ok: true, message: '密码重置成功，请使用新密码登录' }, 200, corsHeaders);
+}
+
+// ── 自动添加密保列（兼容旧表结构） ──
+async function ensureSecurityColumns(env, username) {
+  try {
+    await env.DB.prepare('ALTER TABLE Users ADD COLUMN security_question TEXT DEFAULT NULL').run();
+  } catch(e) { /* 列已存在则忽略 */ }
+  try {
+    await env.DB.prepare('ALTER TABLE Users ADD COLUMN security_answer TEXT DEFAULT NULL').run();
+  } catch(e) { /* 列已存在则忽略 */ }
 }
 
 function json(data, status = 200, headers = {}) {
