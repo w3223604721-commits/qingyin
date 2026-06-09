@@ -57,13 +57,20 @@ async function apiCall(path, body) {
       signal: controller.signal
     });
     clearTimeout(timeout);
-    if (!res.ok) {
-      var errorText = '';
-      try { var errData = await res.json(); errorText = errData.error || ''; } catch(e) {}
-      if (errorText) console.warn('[API] HTTP '+res.status+':', errorText);
-      else console.warn('[API] HTTP '+res.status+' (no JSON body)');
+
+    // 关键修复：只读取一次 response body！避免 "body stream already read" 错误
+    var data = null;
+    try {
+      data = await res.json();
+    } catch(e) {
+      throw new Error('服务器返回了无效数据');
     }
-    return res.json();
+
+    if (!res.ok && data) {
+      if (data.error) console.warn('[API] HTTP '+res.status+':', data.error);
+      else console.warn('[API] HTTP '+res.status+' (no error field)');
+    }
+    return data;
   } catch(e) {
     clearTimeout(timeout);
     if (e.name === 'AbortError') throw new Error('请求超时（'+API_TIMEOUT/1000+'秒），请检查网络');
