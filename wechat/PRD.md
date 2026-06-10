@@ -375,6 +375,45 @@
 
 ---
 
+### 内测 2.4（2026-06-09）
+
+> ⚠️ **内测 2.4 说明**：管理后台体验修复版本。修复删除用户时 CORS 导致"API 不可用"的问题，优化用户详情中密保答案的显示方式。
+
+#### 🐛 关键 Bug 修复
+
+- [x] **删除用户提示"API 不可用"**：
+  - 问题：点击删除用户后浏览器报"API 不可用"，无法完成软删除
+  - 原因：`worker/index.js` CORS 响应头 `Access-Control-Allow-Methods` 仅包含 `GET, POST, OPTIONS`，缺少 `DELETE`。浏览器在发送 DELETE 请求前会发送 OPTIONS 预检请求，服务器返回的允许方法中不含 DELETE，浏览器直接拦截请求导致 `fetch` 异常
+  - 修复：将 CORS 方法列表扩展为 `'GET, POST, DELETE, PUT, OPTIONS'`，覆盖所有管理后台所需的 HTTP 方法
+
+- [x] **用户详情密保答案显示为乱码**：
+  - 问题：管理后台用户详情中「密保答案」字段显示一串 64 位十六进制字符串，看起来像乱码
+  - 原因：密保答案以 **SHA-256 哈希**方式存储（不可逆），之前直接完整显示哈希值，但缺乏说明导致误解
+  - 修复：改为显示缩略格式 `前16位...后8位` + 标注 "（SHA-256哈希存储，仅用于验证，不可逆）" + 点击"展开"可查看完整哈希值
+
+#### 🔧 Worker API 变更
+
+| 接口 | 变更 | 说明 |
+|------|------|------|
+| CORS 全局响应头 | **修复** | `Access-Control-Allow-Methods` 新增 `DELETE` 和 `PUT` 方法 |
+| `DELETE /api/admin/users` | **可用** | CORS 修复后前端可正常调用软删除接口 |
+
+#### 📁 修改文件（2026-06-09 v2.4）
+
+| 文件路径 | 变更类型 | 说明 |
+|----------|----------|------|
+| `worker/index.js` | 修改 | CORS `Access-Control-Allow-Methods` 扩展为 `GET, POST, DELETE, PUT, OPTIONS` |
+| `wechat/admin/index.html` | 修改 | 密保答案改为哈希缩略显示 + SHA-256 说明 + 展开按钮 |
+| `wechat/PRD.md` | 更新 | 新增 v2.4 变更日志 |
+
+#### ⚠️ 部署提醒
+
+- **CloudBase 前端**：`admin/index.html` 已自动部署生效 ✅
+- **Vercel 前端**：Git push 后约 1-2 分钟自动部署 ✅
+- **Cloudflare Worker**：需**手动**在 Cloudflare Dashboard → Workers → qingyin-api → Edit code → 粘贴 `worker/index.js` 全部内容 → Deploy，才能使删除用户功能在前端生效
+
+---
+
 ### 内测 2.2（2026-06-09）
 
 > ⚠️ **内测 2.2 说明**：管理后台重大升级至 **v6**，引入软删除（回收站）机制、仪表盘卡片交互式过滤、用户列表时间范围筛选等核心功能。同时新增对 PRD 文档的访问保护。
