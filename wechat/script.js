@@ -3,7 +3,8 @@
 // ============================================
 
 // ---- 登录系统 (Cloudflare Workers) ----
-const API_BASE = 'https://qingyin-api.w3223604721.workers.dev';
+const API_BASE = 'https://api.qingyinapp.cn';
+const API_FALLBACK = 'https://qingyin-api.w3223604721.workers.dev';
 const API_TIMEOUT = 15000; // 15秒超时
 
 function getToken() { return localStorage.getItem('qingyin_token'); }
@@ -45,37 +46,43 @@ function hideLogin() {
   $('fabBtn').style.setProperty('display', 'flex', 'important');
 }
 
-// 带超时的 API 调用
+// 带超时的 API 调用（主域名不可用时自动切换备选）
+var _apiBaseCached = null;
 async function apiCall(path, body) {
-  var controller = new AbortController();
-  var timeout = setTimeout(function() { controller.abort(); }, API_TIMEOUT);
-  try {
-    var res = await fetch(API_BASE + path, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: body ? JSON.stringify(body) : undefined,
-      signal: controller.signal
-    });
-    clearTimeout(timeout);
-
-    // 关键修复：只读取一次 response body！避免 "body stream already read" 错误
-    var data = null;
+  var urls = _apiBaseCached ? [_apiBaseCached] : [API_BASE, API_FALLBACK];
+  var lastErr = null;
+  for (var i = 0; i < urls.length; i++) {
+    var controller = new AbortController();
+    var timeout = setTimeout(function() { controller.abort(); }, API_TIMEOUT);
     try {
-      data = await res.json();
+      var res = await fetch(urls[i] + path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal
+      });
+      clearTimeout(timeout);
+      // 记住可用的 API 地址，避免下次重试
+      _apiBaseCached = urls[i];
+      var data = null;
+      try {
+        data = await res.json();
+      } catch(e) {
+        throw new Error('服务器返回了无效数据');
+      }
+      if (!res.ok && data) {
+        if (data.error) console.warn('[API] HTTP '+res.status+':', data.error);
+        else console.warn('[API] HTTP '+res.status+' (no error field)');
+      }
+      return data;
     } catch(e) {
-      throw new Error('服务器返回了无效数据');
+      clearTimeout(timeout);
+      lastErr = e;
+      // 只在第一个 URL 超时/网络错误时才尝试第二个
     }
-
-    if (!res.ok && data) {
-      if (data.error) console.warn('[API] HTTP '+res.status+':', data.error);
-      else console.warn('[API] HTTP '+res.status+' (no error field)');
-    }
-    return data;
-  } catch(e) {
-    clearTimeout(timeout);
-    if (e.name === 'AbortError') throw new Error('请求超时（'+API_TIMEOUT/1000+'秒），请检查网络');
-    throw e;
   }
+  if (lastErr.name === 'AbortError') throw new Error('请求超时（'+API_TIMEOUT/1000+'秒），请检查网络');
+  throw lastErr;
 }
 
 // ── 登录 ──

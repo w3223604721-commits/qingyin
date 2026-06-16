@@ -7,7 +7,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://qingyin-api.w3223604721.workers.dev/api/:path*"
+      "destination": "https://api.qingyinapp.cn/api/:path*"
     },
     {
       "source": "/admin/(.*)",
