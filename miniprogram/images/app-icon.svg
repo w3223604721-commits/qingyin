@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4F46E5"/>
+      <stop offset="100%" style="stop-color:#7C3AED"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 圆形背景 -->
+  <circle cx="512" cy="512" r="512" fill="url(#bg)"/>
+
+  <!-- ====== 左山：蓝色山体 + 三棵树（与登陆页完全一致） ====== -->
+  <g transform="translate(290, 340) rotate(-15) scale(4)">
+    <ellipse cx="10" cy="22" rx="7" ry="11" fill="#818CF8"/>
+    <circle cx="5" cy="8" r="3.5" fill="#818CF8"/>
+    <circle cx="10" cy="5" r="3" fill="#818CF8"/>
+    <circle cx="15" cy="4" r="2.5" fill="#818CF8"/>
+  </g>
+
+  <!-- ====== 右山：紫色山体 + 三棵树（与登陆页完全一致） ====== -->
+  <g transform="translate(510, 310) rotate(15) scale(4)">
+    <ellipse cx="10" cy="24" rx="7" ry="11" fill="#A78BFA"/>
+    <circle cx="5" cy="9" r="3.5" fill="#A78BFA"/>
+    <circle cx="10" cy="6" r="3" fill="#A78BFA"/>
+    <circle cx="15" cy="5" r="2.5" fill="#A78BFA"/>
+  </g>
+
+  <!-- 底部弧线（路径） -->
+  <path d="M 260 540 Q 512 580 764 540"
+        stroke="white" stroke-width="8" stroke-linecap="round"
+        fill="none" opacity="0.45"/>
+
+  <!-- 文字：记录每一段旅行 -->
+  <text x="512" y="700"
+        text-anchor="middle"
+        font-family="'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif"
+        font-size="44"
+        font-weight="400"
+        fill="white"
+        opacity="0.75"
+        letter-spacing="8">记录每一段旅行</text>
+
+</svg>

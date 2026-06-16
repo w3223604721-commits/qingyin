@@ -11,9 +11,10 @@
 ### 浏览器 Web 版（生产环境）
 | 平台 | 地址 | 技术栈 |
 |------|------|--------|
-| **Vercel** (主) | [https://20260603112143.vercel.app](https://20260603112143.vercel.app) | 纯 HTML/CSS/JS SPA + Cloudflare Workers 后端 |
+| **自定义域名** (主) | [https://qingyinapp.cn](https://qingyinapp.cn) | 纯 HTML/CSS/JS SPA + Cloudflare Workers 后端 |
+| **Vercel** (备) | [https://20260603112143.vercel.app](https://20260603112143.vercel.app) | 同上（CDN 加速） |
 | **CloudBase** (镜像) | [https://ai-native-d5gv1bzqle900971e-1439954016.tcloudbaseapp.com/](https://ai-native-d5gv1bzqle900971e-1439954016.tcloudbaseapp.com/) | 纯 HTML/CSS/JS SPA + Leaflet 地图 |
-| **管理后台** | [https://20260603112143.vercel.app/admin/](https://20260603112143.vercel.app/admin/) | 管理员账号密码登录 · 用户管理/冻结/回收站 |
+| **管理后台** | [https://qingyinapp.cn/admin/](https://qingyinapp.cn/admin/) | 管理员账号密码登录 · 用户管理/冻结/回收站 |
 | **管理后台(备用)** | [https://ai-native-d5gv1bzqle900971e-1439954016.tcloudbaseapp.com/?v=20260604](https://ai-native-d5gv1bzqle900971e-1439954016.tcloudbaseapp.com/?v=20260604) | Vue 3 + Element Plus · admin/admin123 |
 
 ### 微信小程序版
@@ -21,7 +22,7 @@
 |------|-----|
 | AppID | `wxf4a03848abf825e6` |
 | 环境 ID | `ai-native-d5gv1bzqle900971e` |
-| 最新更新 | 2026-06-08 |
+| 最新更新 | 2026-06-16 |
 
 ### CloudBase 环境
 | 项目 | 值 |
@@ -33,7 +34,8 @@
 ### Cloudflare Workers 后端
 | 项目 | 值 |
 |------|-----|
-| Worker 地址 | `https://qingyin-api.w3223604721.workers.dev` |
+| Worker 地址 | `https://api.qingyinapp.cn`（自定义域名，国内可达）|
+| 备用地址 | `https://qingyin-api.w3223604721.workers.dev` |
 | API 文档 | 见 [CLOUDFLARE_DEPLOY.md](./CLOUDFLARE_DEPLOY.md) |
 
 ## 📦 项目架构
